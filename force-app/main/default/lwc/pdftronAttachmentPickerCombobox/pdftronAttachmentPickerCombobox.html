@@ -1,0 +1,22 @@
+<template>
+    <lightning-card>
+        <div class="slds-var-p-around_xx-small slds-grid">
+            <template if:false={loadFinished}>
+                <div class="spinnerContainer">
+                    <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+                </div>
+            </template>
+            <div id="attachmentCombobox" class="slds-col">
+                <lightning-combobox
+                    class="slds-p-bottom_medium .slds-size_1-of-2"
+                    name="progress"
+                    value={value}
+                    label="Choose an attachment"
+                    placeholder="Choose an attachment..."
+                    options={picklistOptions}
+                    variant="label-hidden"
+                    onchange={handleChange} ></lightning-combobox>
+            </div>
+        </div>
+    </lightning-card>
+</template>
