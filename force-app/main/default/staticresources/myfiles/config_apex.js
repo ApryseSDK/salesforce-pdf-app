@@ -121,12 +121,28 @@ window.addEventListener('viewerLoaded', async function () {
   addSaveButton();
 });
 
-window.addEventListener("documentLoaded", () => {
-});
-
 window.addEventListener("message", receiveMessage, false);
 
 function receiveMessage(event) {
+  //search callback
+  const annotManager = docViewer.getAnnotationManager();
+  
+  const searchListener = (searchTerm, options, results) => {
+    // add redaction annotation for each search result
+    const newAnnotations = results.map(result => {
+      const annotation = new Annotations.RedactionAnnotation();
+      annotation.PageNumber = result.pageNum;
+      annotation.Quads = result.quads.map(quad => quad.getPoints());
+      annotation.StrokeColor = new Annotations.Color(136, 39, 31);
+      return annotation;
+    });
+
+    console.log(newAnnotations);
+
+    annotManager.addAnnotations(newAnnotations);
+    annotManager.drawAnnotationsFromList(newAnnotations);
+  };
+
   if (event.isTrusted && typeof event.data === 'object') {
     switch (event.data.type) {
       case 'OPEN_DOCUMENT':
@@ -154,13 +170,25 @@ function receiveMessage(event) {
             searchUp: false,      // search from the end of the document upwards
             ambientString: true,  // return ambient string as part of the result
           };
+          readerControl.addSearchListener(searchListener);
           readerControl.searchTextFull(event.data.term, searchOptions);
           readerControl.closeElements(['errorModal', 'loadingModal'])
         }
         break;
       case 'REPLACE_CONTENT':
+        readerControl.showErrorMessage('Replacing content');
         const { searchString, replacementString } = event.data.payload;
         replaceContent(searchString, replacementString);
+        setTimeout(() => {
+          readerControl.closeElements(['errorModal', 'loadingModal'])
+        }, 3000)
+        break;
+      case 'REDACT_CONTENT':
+        readerControl.showErrorMessage('Applying redactions');
+        docViewer.getAnnotationManager().applyRedactions();
+        setTimeout(() => {
+          readerControl.closeElements(['errorModal', 'loadingModal'])
+        }, 2000)
         break;
       case 'LMS_RECEIVED':
         readerControl.showErrorMessage('Link received: ' + event.data.message);

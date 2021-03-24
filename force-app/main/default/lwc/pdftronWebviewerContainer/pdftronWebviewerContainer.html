@@ -1,12 +1,18 @@
 <template>
-    <lightning-card>
-        <div id="cardContainer">
-            <div id="comboboxContainer">
-                <c-pdftron-content-replacer record-id={recordId}></c-pdftron-content-replacer>
+    <lightning-card title="Salesforce PDF App" icon-name="doctype:pdf" class="slds-var-p-around_small">
+        <div class="slds-grid">
+            <div class="slds-col slds-size_1-of-8">
+                <c-pdftron-side-bar></c-pdftron-side-bar>
             </div>
-            <div id="wvContainer">
-                <c-pdftron-wv-instance record-id={recordId}></c-pdftron-wv-instance>
+            <div class="slds-col slds-size_7-of-8">
+                <div id="comboboxContainer">
+                    <c-pdftron-content-replacer record-id={recordId}></c-pdftron-content-replacer>
+                </div>
+                <div id="wvContainer">
+                    <c-pdftron-wv-instance record-id={recordId}></c-pdftron-wv-instance>
+                </div>
             </div>
         </div>
+        
     </lightning-card>
 </template>

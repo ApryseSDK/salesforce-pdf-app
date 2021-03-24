@@ -8,6 +8,7 @@ import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import mimeTypes from './mimeTypes'
 import { registerListener, unregisterAllListeners } from 'c/pubsub';
 import saveDocument from '@salesforce/apex/PDFTron_ContentVersionController.saveDocument';
+import lib from '@salesforce/resourceUrl/lib';
 
 function _base64ToArrayBuffer(base64) {
   var binary_string = window.atob(base64);
@@ -42,6 +43,7 @@ export default class PdftronWvInstance extends LightningElement {
     registerListener('blobSelected', this.handleBlobSelected, this);
     registerListener('search', this.search, this);
     registerListener('replace', this.contentReplace, this);
+    registerListener('redact', this.contentRedact, this);
     window.addEventListener('message', this.handleReceiveMessage.bind(this), false);
   }
 
@@ -58,6 +60,10 @@ export default class PdftronWvInstance extends LightningElement {
 
   contentReplace(payload) {
     this.iframeWindow.postMessage({ type: 'REPLACE_CONTENT', payload }, '*');
+  }
+
+  contentRedact() {
+    this.iframeWindow.postMessage({ type: 'REDACT_CONTENT' }, '*');
   }
 
   search(term) {
