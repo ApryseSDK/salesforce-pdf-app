@@ -3,14 +3,17 @@ import { CurrentPageReference } from 'lightning/navigation';
 import { fireEvent } from 'c/pubsub';
 import getAttachments from "@salesforce/apex/PDFTron_ContentVersionController.getAttachments";
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import pdftronlogo from '@salesforce/resourceUrl/PDFTron_Logo';
 
 export default class PdftronContentReplacer extends LightningElement {
-
-    error;
-    pdftronLogo = pdftronlogo;
+    //file upload
+    MAX_FILE_SIZE = 5;
+    uploadedFiles;
+    fileName;
+    file;
 
     //UI
+    error;
+
     @track value = '';
     @track searchTerm = '[Company Name]';
     @track replaceTerm = 'PDFTron Systems Inc.';
@@ -22,7 +25,7 @@ export default class PdftronContentReplacer extends LightningElement {
     @api recordId;
     @wire(CurrentPageReference) pageRef;
 
-    
+
     @wire(getAttachments, { recordId: "$recordId" })
     attachments({ error, data }) {
         if (data) {
@@ -84,6 +87,12 @@ export default class PdftronContentReplacer extends LightningElement {
         }, 350);
     }
 
+    handleContentRedact() {
+        this.loadFinished = false;
+        fireEvent(this.pageRef, 'redact', {});
+        this.loadFinished = true;
+    }
+
     handleContentReplace() {
         console.log(this.replaceTerm);
 
@@ -119,13 +128,13 @@ export default class PdftronContentReplacer extends LightningElement {
         this.loadFinished = true;
     }
 
-    onFileChange(event) {
+    onFileUpload(event) {
         if (event.target.files.length > 0) {
             this.uploadedFiles = event.target.files;
             this.fileName = event.target.files[0].name;
             this.file = this.uploadedFiles[0];
             if (this.file.size > this.MAX_FILE_SIZE) {
-                alert("File Size Can not exceed" + MAX_FILE_SIZE);
+                alert(`File Size Can not exceed ${MAX_FILE_SIZE}. Your file's size is ${this.file.size}`);
             }
         }
     }

@@ -1,0 +1,39 @@
+<template>
+    <div class="slds-var-p-around_xx-small">
+        <lightning-card>
+            <lightning-accordion allow-multiple-sections-open>
+                <lightning-accordion-section name="A" label="Search">
+                    <p class="slds-p-around_x-small">
+                        Search text by typing into the search box. Press enter or stop typing to fire the search
+                        event.
+                    </p>
+                </lightning-accordion-section>
+                <lightning-accordion-section name="B" label="Replace">
+                    <p class="slds-p-around_x-small">
+                        Replace text on +30 document types including: PDF, MS Office (doc, docx, xlsx, pptx) and
+                        Images
+                        (jpg, png). Uploaded files don't transfer across a network - replacement occurs directly in
+                        Salesforce.
+                        <br /><br />
+                        Search for text with brackets like:<br />
+                        <b>[Company Name]</b>
+                    </p>
+                </lightning-accordion-section>
+                <lightning-accordion-section name="C" label="Redact">
+                    <p class="slds-p-around_x-small">
+                        Redact content by searching or using the redaction tool to highlight text, then clicking on
+                        the
+                        redact button.
+                    </p>
+                </lightning-accordion-section>
+                <lightning-accordion-section name="D" label="Repo">
+                    <p class="slds-p-around_x-small">
+                        You can view the source code <a href="https://github.com/PDFTron/salesforce-pdf-app"
+                            target="_blank">here</a>.<br/><br/>Learn more about WebViewer at <a href="https://www.pdftron.com/documentation/web/"
+                            target="_blank">pdftron.com</a>.
+                    </p>
+                </lightning-accordion-section>
+            </lightning-accordion>
+        </lightning-card>
+    </div>
+</template>
