@@ -1,32 +1,42 @@
 <template>
     <div class="slds-var-p-around_xx-small">
         <lightning-card>
-            <lightning-accordion allow-multiple-sections-open>
-                <lightning-accordion-section name="A" label="Search">
+            <lightning-accordion onsectiontoggle={handleToggleSection}>
+                <lightning-accordion-section name="Open Documents" label="View">
+                    <p class="slds-p-around_x-small">
+                        View an attachment by selecting a file on the right hand side.
+                    </p>
+                </lightning-accordion-section>
+                <lightning-accordion-section name="Annotate Documents" label="Annotate">
+                    <p class="slds-p-around_x-small">
+                        Annotate documents by using the annotation tools in the WebViewer UI.
+                    </p>
+                </lightning-accordion-section>
+                <lightning-accordion-section name="Save Annotations" label="Save">
+                    <p class="slds-p-around_x-small">
+                        Save annotations by clicking the save button or using Ctrl + S (Windows) or Cmd + S (macOS).
+                    </p>
+                </lightning-accordion-section>
+                <lightning-accordion-section name="Search Text" label="Search">
                     <p class="slds-p-around_x-small">
                         Search text by typing into the search box. Press enter or stop typing to fire the search
                         event.
                     </p>
                 </lightning-accordion-section>
-                <lightning-accordion-section name="B" label="Replace">
-                    <p class="slds-p-around_x-small">
-                        Replace text on +30 document types including: PDF, MS Office (doc, docx, xlsx, pptx) and
-                        Images
-                        (jpg, png). Uploaded files don't transfer across a network - replacement occurs directly in
-                        Salesforce.
-                        <br /><br />
-                        Search for text with brackets like:<br />
-                        <b>[Company Name]</b>
-                    </p>
-                </lightning-accordion-section>
-                <lightning-accordion-section name="C" label="Redact">
+                <lightning-accordion-section name="Redact Content" label="Redact">
                     <p class="slds-p-around_x-small">
                         Redact content by searching or using the redaction tool to highlight text, then clicking on
-                        the
-                        redact button.
+                        the redact button.
                     </p>
                 </lightning-accordion-section>
-                <lightning-accordion-section name="D" label="Repo">
+                <lightning-accordion-section name="Replace Content" label="Replace">
+                    <p class="slds-p-around_x-small">
+                        Search for text with brackets like:<br />
+                        <b>[Company Name]</b><br /><br />
+                        Enter a value in the 'Replace Text' field and click on 'Replace All'.
+                    </p>
+                </lightning-accordion-section>
+                <lightning-accordion-section name="Repo" label="Repo">
                     <p class="slds-p-around_x-small">
                         You can view the source code <a href="https://github.com/PDFTron/salesforce-pdf-app"
                             target="_blank">here</a>.<br/><br/>Learn more about WebViewer at <a href="https://www.pdftron.com/documentation/web/"

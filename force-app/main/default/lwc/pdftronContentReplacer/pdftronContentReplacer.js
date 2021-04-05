@@ -3,6 +3,8 @@ import { CurrentPageReference } from 'lightning/navigation';
 import { fireEvent } from 'c/pubsub';
 import getAttachments from "@salesforce/apex/PDFTron_ContentVersionController.getAttachments";
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { publish, createMessageContext, releaseMessageContext, subscribe, unsubscribe } from 'lightning/messageService';
+import WebViewerMC from "@salesforce/messageChannel/WebViewerMessageChannel__c";
 
 export default class PdftronContentReplacer extends LightningElement {
     //file upload
@@ -11,9 +13,21 @@ export default class PdftronContentReplacer extends LightningElement {
     fileName;
     file;
 
+    //LMS
+    @track receivedMessage = '';
+    channel;
+    context = createMessageContext();
+
     //UI
     error;
 
+    //conditional rendering
+    @track renderSearch = false;
+    @track renderReplace = false;
+    @track renderRedact = false;
+
+
+    @track title = 'Open Documents';
     @track value = '';
     @track searchTerm = '[Company Name]';
     @track replaceTerm = 'PDFTron Systems Inc.';
@@ -49,6 +63,14 @@ export default class PdftronContentReplacer extends LightningElement {
         }
     };
 
+    connectedCallback() {
+        this.handleSubscribe();
+    }
+
+    disconnectedCallback() {
+        this.handleUnsubscribe();
+    }
+
     showNotification(title, message, variant) {
         const evt = new ShowToastEvent({
             title: title,
@@ -64,7 +86,6 @@ export default class PdftronContentReplacer extends LightningElement {
             this.search(evt.target.value);
         }
     }
-
 
     handleSearch(event) {
         // Debouncing this method: Do not actually fire the event as long as this function is
@@ -112,6 +133,47 @@ export default class PdftronContentReplacer extends LightningElement {
         } else {
             this.error = 'You need to include a replace text value.'
         }
+    }
+
+    handleSubscribe() {
+        if (this.channel) {
+            return;
+        }
+        this.channel = subscribe(this.context, WebViewerMC, (message) => {
+            if (message) {
+                console.log(message);
+                this.title = message.messageBody;
+
+                switch (this.title) {
+                    case "Search Text":
+                        this.renderSearch = true;
+                        this.renderRedact = false;
+                        this.renderReplace = false;
+                        break;
+                    case "Replace Content":
+                        this.renderSearch = true;
+                        this.renderRedact = false;
+                        this.renderReplace = true;
+                        break;
+                    case "Redact Content":
+                        this.renderSearch = true;
+                        this.renderRedact = true;
+                        this.renderReplace = false;
+                        break;
+                    default:
+                        this.renderSearch = false;
+                        this.renderRedact = false;
+                        this.renderReplace = false;
+                        break;
+                }
+
+            }
+        });
+    }
+
+    handleUnsubscribe() {
+        releaseMessageContext(this.context);
+        unsubscribe(this.channel);
     }
 
     search(searchTerm) {
