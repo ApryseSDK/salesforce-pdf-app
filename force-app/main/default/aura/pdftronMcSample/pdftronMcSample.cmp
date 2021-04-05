@@ -1,0 +1,18 @@
+<aura:component implements="flexipage:availableForAllPageTypes" access="global">
+    <aura:attribute name="message" type="String"/>
+
+    <!-- publish message when user releases key-->
+    <lightning:input 
+        name="myMessage" 
+        value="{! v.message}" 
+        onkeyup="{! c.publishMC }"
+        placeholder="Your message goes here" 
+        label="Send a message from Aura using LMS">
+    </lightning:input>
+
+    <div class="slds-p-top_small">
+        <lightning:button label="Send" variant="brand" onclick="{! c.publishMC }" /> 
+    </div>
+
+    <lightning:messageChannel type="WebViewerMessageChannel__c" aura:id="webviewerMessageChannel" onMessage="{!c.handleReceiveMessage}"/>
+</aura:component>	

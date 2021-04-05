@@ -4,11 +4,11 @@ import { loadScript } from 'lightning/platformResourceLoader';
 import libUrl from '@salesforce/resourceUrl/lib';
 import myfilesUrl from '@salesforce/resourceUrl/myfiles';
 import { publish, createMessageContext, releaseMessageContext, subscribe, unsubscribe } from 'lightning/messageService';
+import WebViewerMC from "@salesforce/messageChannel/WebViewerMessageChannel__c";
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import mimeTypes from './mimeTypes'
 import { registerListener, unregisterAllListeners } from 'c/pubsub';
 import saveDocument from '@salesforce/apex/PDFTron_ContentVersionController.saveDocument';
-import lib from '@salesforce/resourceUrl/lib';
 
 function _base64ToArrayBuffer(base64) {
   var binary_string = window.atob(base64);
@@ -22,12 +22,12 @@ function _base64ToArrayBuffer(base64) {
 
 export default class PdftronWvInstance extends LightningElement {
   @track receivedMessage = '';
-  enableRedaction = true;
   channel;
   context = createMessageContext();
 
   source = 'My file';
   fullAPI = true;
+  enableRedaction = true;
   @api recordId;
 
   @wire(CurrentPageReference)
@@ -40,6 +40,7 @@ export default class PdftronWvInstance extends LightningElement {
   connectedCallback() {
     //'/sfc/servlet.shepherd/version/download/0694x000000pEGyAAM'
     ///servlet/servlet.FileDownload?file=documentId0694x000000pEGyAAM
+    this.handleSubscribe();
     registerListener('blobSelected', this.handleBlobSelected, this);
     registerListener('search', this.search, this);
     registerListener('replace', this.contentReplace, this);
@@ -50,11 +51,22 @@ export default class PdftronWvInstance extends LightningElement {
   disconnectedCallback() {
     unregisterAllListeners(this);
     window.removeEventListener('message', this.handleReceiveMessage, true);
-    releaseMessageContext(this.context);
     this.handleUnsubscribe();
   }
 
+  handleSubscribe() {
+    if (this.channel) {
+      return;
+    }
+    this.channel = subscribe(this.context, WebViewerMC, (message) => {
+      if(message) {
+        console.log(message);
+      }
+    });
+  }
+
   handleUnsubscribe() {
+    releaseMessageContext(this.context);
     unsubscribe(this.channel);
   }
 
