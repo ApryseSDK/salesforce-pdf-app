@@ -21,8 +21,6 @@ function _base64ToArrayBuffer(base64) {
 }
 
 export default class PdftronWvInstance extends LightningElement {
-  config = '/config_apex.js';
-
   @track receivedMessage = '';
   channel;
   context = createMessageContext();
@@ -40,15 +38,8 @@ export default class PdftronWvInstance extends LightningElement {
   }
 
   connectedCallback() {
-    //'/sfc/servlet.shepherd/version/download/0694x000000pEGyAAM'
-    ///servlet/servlet.FileDownload?file=documentId0694x000000pEGyAAM
     this.handleSubscribe();
-    registerListener('blobSelected', this.handleBlobSelected, this);
-    registerListener('search', this.search, this);
     registerListener('video', this.loadVideo, this);
-    registerListener('replace', this.contentReplace, this);
-    registerListener('redact', this.contentRedact, this);
-    window.addEventListener('message', this.handleReceiveMessage.bind(this), false);
   }
 
   disconnectedCallback() {
@@ -62,7 +53,7 @@ export default class PdftronWvInstance extends LightningElement {
       return;
     }
     this.channel = subscribe(this.context, WebViewerMC, (message) => {
-      if (message) {
+      if(message) {
         console.log(message);
       }
     });
@@ -72,37 +63,10 @@ export default class PdftronWvInstance extends LightningElement {
     releaseMessageContext(this.context);
     unsubscribe(this.channel);
   }
-
-  contentReplace(payload) {
-    this.iframeWindow.postMessage({ type: 'REPLACE_CONTENT', payload }, '*');
-  }
-
-  contentRedact() {
-    this.iframeWindow.postMessage({ type: 'REDACT_CONTENT' }, '*');
-  }
-
+  
   loadVideo(url) {
+    console.log(`Sending ${url} to iFrame`);
     this.iframeWindow.postMessage({ type: 'LOAD_VIDEO', url }, '*');
-  }
-
-  search(term) {
-    this.iframeWindow.postMessage({ type: 'SEARCH_DOCUMENT', term }, '*');
-  }
-
-  handleBlobSelected(record) {
-    record = JSON.parse(record);
-
-    var blobby = new Blob([_base64ToArrayBuffer(record.body)], {
-      type: mimeTypes[record.FileExtension]
-    });
-
-    const payload = {
-      blob: blobby,
-      extension: record.cv.FileExtension,
-      filename: record.cv.Title + "." + record.cv.FileExtension,
-      documentId: record.cv.Id
-    };
-    this.iframeWindow.postMessage({ type: 'OPEN_DOCUMENT_BLOB', payload }, '*');
   }
 
   renderedCallback() {
@@ -134,7 +98,7 @@ export default class PdftronWvInstance extends LightningElement {
       custom: JSON.stringify(myObj),
       backendType: 'ems',
       initialDoc: url,
-      config: myfilesUrl + this.config,
+      config: myfilesUrl + '/config_video.js',
       fullAPI: this.fullAPI,
       enableFilePicker: this.enableFilePicker,
       enableRedaction: this.enableRedaction,
@@ -145,23 +109,5 @@ export default class PdftronWvInstance extends LightningElement {
     viewerElement.addEventListener('ready', () => {
       this.iframeWindow = viewerElement.querySelector('iframe').contentWindow;
     })
-
-  }
-
-  handleReceiveMessage(event) {
-    const me = this;
-    if (event.isTrusted && typeof event.data === 'object') {
-      switch (event.data.type) {
-        case 'SAVE_DOCUMENT':
-          saveDocument({ json: JSON.stringify(event.data.payload), recordId: this.recordId }).then((response) => {
-            me.iframeWindow.postMessage({ type: 'DOCUMENT_SAVED', response }, '*')
-          }).catch(error => {
-            console.error(JSON.stringify(error));
-          });
-          break;
-        default:
-          break;
-      }
-    }
   }
 }
