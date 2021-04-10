@@ -5,16 +5,25 @@
         </div>
     </template>
     <lightning-card class="slds-var-p-around_small" title={title}>
-        <div class="slds-var-p-around_xx-small slds-grid">
-            <div id="attachmentCombobox" class="slds-col slds-p-around_x-small slds-size_3-of-4">
-                <lightning-combobox name="progress" value={value} label="Document" placeholder="Choose an attachment..."
-                    options={picklistOptions} onchange={handleChange}></lightning-combobox>
+        <template if:false={renderVideo}>
+            <div class="slds-var-p-around_xx-small slds-grid">
+                <div id="attachmentCombobox" class="slds-col slds-p-around_x-small slds-size_3-of-4">
+                    <lightning-combobox name="progress" value={value} label="Document" placeholder="Choose an attachment..."
+                        options={picklistOptions} onchange={handleChange}></lightning-combobox>
+                </div>
+                <div class="slds-col slds-p-around_x-small slds-size_1-of-4">
+                    <lightning-input type="file" disabled onchange={onFileUpload} name="uploadFile" label="Upload File">
+                    </lightning-input>
+                </div>
             </div>
-            <div class="slds-col slds-p-around_x-small slds-size_1-of-4">
-                <lightning-input type="file" disabled onchange={onFileUpload} name="uploadFile" label="Upload File">
-                </lightning-input>
+        </template>
+        <template if:true={renderVideo}>
+            <div class="slds-var-p-around_xx-small slds-grid">
+                <div id="videoURL" class="slds-col slds-p-around_x-small slds-size_3-of-4">
+                    <lightning-input type="text" label="Video URL" disabled placeholder="Enter Video URL (.mp4 file) here..." value={videoURL} onchange={handleVideoURL}></lightning-input>
+                </div>
             </div>
-        </div>
+        </template>
         <div class="slds-var-p-around_xx-small slds-grid">
             <template if:true={renderSearch}>
                 <div class="slds-col slds-size_3-of-4 slds-p-around_x-small" onkeyup={handleKeyUp}>
@@ -42,6 +51,16 @@
                         onclick={handleContentReplace}>
                     </lightning-button>
                 </div>
+            </div>
+        </template>
+        <template if:false={renderVideo}> 
+            <div id="wvContainer" class="slds-var-p-around_small">
+                <c-pdftron-wv-instance record-id={recordId}></c-pdftron-wv-instance>
+            </div>
+        </template>
+        <template if:true={renderVideo}> 
+            <div id="wvVideoContainer" class="slds-var-p-around_small">
+                <c-pdftron-video-instance></c-pdftron-video-instance>
             </div>
         </template>
     </lightning-card>

@@ -2,11 +2,13 @@ import { LightningElement, track, wire, api } from 'lwc';
 import { CurrentPageReference } from 'lightning/navigation';
 import { fireEvent } from 'c/pubsub';
 import getAttachments from "@salesforce/apex/PDFTron_ContentVersionController.getAttachments";
+import getPdfAsBlobFromUrl from "@salesforce/apex/PDFTron_ContentVersionController.getPdfAsBlobFromUrl";
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { publish, createMessageContext, releaseMessageContext, subscribe, unsubscribe } from 'lightning/messageService';
 import WebViewerMC from "@salesforce/messageChannel/WebViewerMessageChannel__c";
+import { NavigationMixin } from 'lightning/navigation';
 
-export default class PdftronContentReplacer extends LightningElement {
+export default class PdftronContentReplacer extends NavigationMixin (LightningElement) {
     //file upload
     MAX_FILE_SIZE = 5;
     uploadedFiles;
@@ -25,12 +27,14 @@ export default class PdftronContentReplacer extends LightningElement {
     @track renderSearch = false;
     @track renderReplace = false;
     @track renderRedact = false;
+    @track renderVideo = false;
 
 
     @track title = 'Open Documents';
     @track value = '';
     @track searchTerm = '[Company Name]';
     @track replaceTerm = 'PDFTron Systems Inc.';
+    @track videoURL = 'https://pdftron.s3.amazonaws.com/downloads/pl/video/video.mp4';
     @track picklistOptions = [];
     @track isSaving = false;
     @track loadFinished = false;
@@ -62,7 +66,6 @@ export default class PdftronContentReplacer extends LightningElement {
             this.showNotification('Error', def_message + error.body.message, 'error');
         }
     };
-
     connectedCallback() {
         this.handleSubscribe();
     }
@@ -149,21 +152,31 @@ export default class PdftronContentReplacer extends LightningElement {
                         this.renderSearch = true;
                         this.renderRedact = false;
                         this.renderReplace = false;
+                        this.renderVideo = false;
                         break;
                     case "Replace Content":
                         this.renderSearch = true;
                         this.renderRedact = false;
                         this.renderReplace = true;
+                        this.renderVideo = false;
                         break;
                     case "Redact Content":
                         this.renderSearch = true;
                         this.renderRedact = true;
                         this.renderReplace = false;
+                        this.renderVideo = false;
+                        break;
+                    case "Video":
+                        this.renderSearch = false;
+                        this.renderRedact = false;
+                        this.renderReplace = false;
+                        this.renderVideo = true;
                         break;
                     default:
                         this.renderSearch = false;
                         this.renderRedact = false;
                         this.renderReplace = false;
+                        this.renderVideo = false;
                         break;
                 }
 
@@ -174,6 +187,12 @@ export default class PdftronContentReplacer extends LightningElement {
     handleUnsubscribe() {
         releaseMessageContext(this.context);
         unsubscribe(this.channel);
+    }
+
+    handleVideoURL(event) {
+        console.log(`New vid URL: ${event.detail.value}`);
+        this.videoURL = event.detail.value;
+        fireEvent(this.pageRef, 'video', this.videoURL);
     }
 
     search(searchTerm) {
