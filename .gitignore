@@ -1,0 +1,21 @@
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Thumbnails
+._*
+
+# these resources maintainted manually
+force-app/main/default/staticresources/full
+force-app/main/default/staticresources/lean
+force-app/main/default/staticresources/asmFull
+force-app/main/default/staticresources/asmLean
+force-app/main/default/staticresources/lib
+force-app/main/default/staticresources/resource
+force-app/main/default/staticresources/office
+force-app/main/default/staticresources/officeResource
+force-app/main/default/staticresources/external
+*.zip
+.sfdx/
+.vscode/
