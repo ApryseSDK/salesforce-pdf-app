@@ -38,12 +38,18 @@ async function saveDocument() {
 
   const fileType = doc.getType();
   const filename = doc.getFilename();
+
+  // xfdf string can be saved to a custom object
+  // to achieve this fire event to LWC here, and pass data to apex
   const xfdfString = await docViewer.getAnnotationManager().exportAnnotations();
+  
+  //flatten document to include annotations
   const data = await doc.getFileData({
     // Saves the document with annotations in it
     xfdfString
   });
 
+  //build a blob
   let binary = '';
   const bytes = new Uint8Array(data);
   for (let i = 0; i < bytes.byteLength; i++) {
@@ -58,7 +64,7 @@ async function saveDocument() {
     base64Data,
     contentDocumentId: doc.__contentDocumentId
   }
-  // Post message to LWC
+  // Post message to LWC, which in turn calls PDFTron_ContentVersionController.saveDocument() in the Apex controller
   parent.postMessage({ type: 'SAVE_DOCUMENT', payload }, '*');
 }
 

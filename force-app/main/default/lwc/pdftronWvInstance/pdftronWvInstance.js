@@ -21,6 +21,8 @@ function _base64ToArrayBuffer(base64) {
 }
 
 export default class PdftronWvInstance extends LightningElement {
+  config = '/config_apex.js';
+
   @track receivedMessage = '';
   channel;
   context = createMessageContext();
@@ -43,6 +45,7 @@ export default class PdftronWvInstance extends LightningElement {
     this.handleSubscribe();
     registerListener('blobSelected', this.handleBlobSelected, this);
     registerListener('search', this.search, this);
+    registerListener('video', this.loadVideo, this);
     registerListener('replace', this.contentReplace, this);
     registerListener('redact', this.contentRedact, this);
     window.addEventListener('message', this.handleReceiveMessage.bind(this), false);
@@ -59,7 +62,7 @@ export default class PdftronWvInstance extends LightningElement {
       return;
     }
     this.channel = subscribe(this.context, WebViewerMC, (message) => {
-      if(message) {
+      if (message) {
         console.log(message);
       }
     });
@@ -76,6 +79,10 @@ export default class PdftronWvInstance extends LightningElement {
 
   contentRedact() {
     this.iframeWindow.postMessage({ type: 'REDACT_CONTENT' }, '*');
+  }
+
+  loadVideo(url) {
+    this.iframeWindow.postMessage({ type: 'LOAD_VIDEO', url }, '*');
   }
 
   search(term) {
@@ -127,7 +134,7 @@ export default class PdftronWvInstance extends LightningElement {
       custom: JSON.stringify(myObj),
       backendType: 'ems',
       initialDoc: url,
-      config: myfilesUrl + '/config_apex.js',
+      config: myfilesUrl + this.config,
       fullAPI: this.fullAPI,
       enableFilePicker: this.enableFilePicker,
       enableRedaction: this.enableRedaction,

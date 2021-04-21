@@ -49,6 +49,20 @@ public with sharing class PDFTron_ContentVersionController {
         }
     }
 
+    @AuraEnabled(Cacheable=true)
+    public static String getPdfAsBlobFromUrl(String url){
+        try {
+            //http://www.africau.edu/images/default/sample.pdf
+
+            Blob pdfData = new PageReference('http://www.africau.edu/images/default/sample.pdf').getContent();
+            String pdfString = EncodingUtil.base64Encode(pdfData);
+            system.debug(pdfString);
+            return pdfString;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
     @AuraEnabled
     public static void saveDocument(String json, String recordId) {
         try {
