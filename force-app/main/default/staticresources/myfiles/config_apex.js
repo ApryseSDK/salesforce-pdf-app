@@ -29,6 +29,21 @@ if (custom.fullAPI) {
 window.CoreControls.setExternalPath(resourceURL + 'external')
 window.CoreControls.setCustomFontURL('https://pdftron.s3.amazonaws.com/custom/ID-zJWLuhTffd3c/vlocity/webfontsv20/');
 
+const redactionSearchSamples = [
+  {
+    key: "phone",
+    value: `\\d?(\\s?|-?|\\+?|\\.?)((\\(\\d{1,4}\\))|(\\d{1,3})|\\s?)(\\s?|-?|\\.?)((\\(\\d{1,3}\\))|(\\d{1,3})|\\s?)(\\s?|-?|\\.?)((\\(\\d{1,3}\\))|(\\d{1,3})|\\s?)(\\s?|-?|\\.?)\\d{3}(-|\\.|\\s)\\d{4,5}`,
+  },
+  {
+    key: "email",
+    value: `\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}\\b`,
+  },
+  {
+    key: "date",
+    value: "(\b(0?[1-9]|[12]\d|30|31)[^\w\d\r\n:](0?[1-9]|1[0-2])[^\w\d\r\n:](\d{4}|\d{2})\b)|(\b(0?[1-9]|1[0-2])[^\w\d\r\n:](0?[1-9]|[12]\d|30|31)[^\w\d\r\n:](\d{4}|\d{2})\b)",
+  },
+];
+
 async function saveDocument() {
   const doc = docViewer.getDocument();
   if (!doc) {
@@ -172,7 +187,7 @@ function receiveMessage(event) {
             caseSensitive: true,  // match case
             wholeWord: true,      // match whole words only
             wildcard: false,      // allow using '*' as a wildcard value
-            regex: false,         // string is treated as a regular expression
+            regex: true,         // string is treated as a regular expression
             searchUp: false,      // search from the end of the document upwards
             ambientString: true,  // return ambient string as part of the result
           };
@@ -192,6 +207,33 @@ function receiveMessage(event) {
       case 'REDACT_CONTENT':
         readerControl.showErrorMessage('Applying redactions');
         docViewer.getAnnotationManager().applyRedactions();
+        setTimeout(() => {
+          readerControl.closeElements(['errorModal', 'loadingModal'])
+        }, 2000)
+        break;
+      case 'REDACT_CONTENT_PHONE':
+        readerControl.showErrorMessage('Searching for phone numbers');
+        docViewer.clearSearchResults();
+        readerControl.addSearchListener(searchListener);
+        readerControl.searchTextFull(redactionSearchSamples[0].value, { regex: true });
+        setTimeout(() => {
+          readerControl.closeElements(['errorModal', 'loadingModal'])
+        }, 2000)
+        break;
+      case 'REDACT_CONTENT_EMAIL':
+        readerControl.showErrorMessage('Searching for emails');
+        docViewer.clearSearchResults();
+        readerControl.addSearchListener(searchListener);
+        readerControl.searchTextFull(redactionSearchSamples[1].value, { regex: true });
+        setTimeout(() => {
+          readerControl.closeElements(['errorModal', 'loadingModal'])
+        }, 2000)
+        break;
+      case 'REDACT_CONTENT_DTM':
+        readerControl.showErrorMessage('Searching for dates');
+        docViewer.clearSearchResults();
+        readerControl.addSearchListener(searchListener);
+        readerControl.searchTextFull(redactionSearchSamples[2].value, { regex: true });
         setTimeout(() => {
           readerControl.closeElements(['errorModal', 'loadingModal'])
         }, 2000)
