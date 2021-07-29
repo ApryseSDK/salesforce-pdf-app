@@ -48,6 +48,9 @@ export default class PdftronWvInstance extends LightningElement {
     registerListener('video', this.loadVideo, this);
     registerListener('replace', this.contentReplace, this);
     registerListener('redact', this.contentRedact, this);
+    registerListener('redactPhone', this.contentRedactPhone, this);
+    registerListener('redactDTM', this.contentRedactDTM, this);
+    registerListener('redactEmail', this.contentRedactEmail, this);
     window.addEventListener('message', this.handleReceiveMessage.bind(this), false);
   }
 
@@ -79,6 +82,18 @@ export default class PdftronWvInstance extends LightningElement {
 
   contentRedact() {
     this.iframeWindow.postMessage({ type: 'REDACT_CONTENT' }, '*');
+  }
+
+  contentRedactPhone() {
+    this.iframeWindow.postMessage({ type: 'REDACT_CONTENT_PHONE' }, '*');
+  }
+
+  contentRedactDTM() {
+    this.iframeWindow.postMessage({ type: 'REDACT_CONTENT_DTM' }, '*');
+  }
+
+  contentRedactEmail() {
+    this.iframeWindow.postMessage({ type: 'REDACT_CONTENT_EMAIL' }, '*');
   }
 
   loadVideo(url) {

@@ -40,6 +40,17 @@
                 </div>
             </template>
         </div>
+        <div class="slds-var-p-around_xx-small slds-grid">
+            <template if:true={renderRedact}>
+                <div class="slds-col slds-size_4-of-4 slds-p-around_x-small">
+                    <lightning-button-group>
+                        <lightning-button label="Phone Numbers" icon-name="utility:call" onclick={handleContentRedactPhone}></lightning-button>
+                        <lightning-button label="Dates" icon-name="utility:key_dates" onclick={handleContentRedactDTM}></lightning-button>
+                        <lightning-button label="Emails" icon-name="utility:email" onclick={handleContentRedactEmail}></lightning-button>
+                    </lightning-button-group>
+                </div>
+            </template>
+        </div>    
         <template if:true={renderReplace}>
             <div class="slds-var-p-around_xx-small slds-grid">
                 <div class="slds-col slds-size_3-of-4 slds-p-around_x-small">

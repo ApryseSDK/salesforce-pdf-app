@@ -117,6 +117,24 @@ export default class PdftronContentReplacer extends NavigationMixin (LightningEl
         this.loadFinished = true;
     }
 
+    handleContentRedactPhone() {
+        this.loadFinished = false;
+        fireEvent(this.pageRef, 'redactPhone', {});
+        this.loadFinished = true;
+    }
+
+    handleContentRedactDTM() {
+        this.loadFinished = false;
+        fireEvent(this.pageRef, 'redactDTM', {});
+        this.loadFinished = true;
+    }
+
+    handleContentRedactEmail() {
+        this.loadFinished = false;
+        fireEvent(this.pageRef, 'redactEmail', {});
+        this.loadFinished = true;
+    }
+
     handleContentReplace() {
         console.log(this.replaceTerm);
 
