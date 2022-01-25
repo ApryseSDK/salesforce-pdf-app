@@ -97,7 +97,7 @@ export default class PdftronWvInstance extends LightningElement {
 
     const viewerElement = this.template.querySelector("div");
     // eslint-disable-next-line no-unused-vars
-    const viewer = new PDFTron.WebViewer(
+    const viewer = new WebViewer(
       {
         path: libUrl, // path to the PDFTron 'lib' folder on your server
         custom: JSON.stringify(myObj),

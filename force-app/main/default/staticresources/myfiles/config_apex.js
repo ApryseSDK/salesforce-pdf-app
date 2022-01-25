@@ -136,7 +136,16 @@ async function replaceContent(searchString, replacementString) {
 }
 
 window.addEventListener("viewerLoaded", async function () {
+  //set current user, set up mentions for sample users
+  instance.Core.documentViewer
+    .getAnnotationManager()
+    .setCurrentUser(custom.username);
+  instance.UI.mentions.setUserData(JSON.parse(custom.userlist));
+
   instance.enableFeatures([instance.Feature.Redaction]);
+  instance.UI.setToolbarGroup("toolbarGroup-View");
+
+  instance.UI.disableElements(["header"]);
   addSaveButton();
 });
 
@@ -164,6 +173,108 @@ function receiveMessage(event) {
 
   if (event.isTrusted && typeof event.data === "object") {
     switch (event.data.type) {
+      case "RIBBON_CHANGE":
+        //UI customization based on use case
+        switch (event.data.ribbon) {
+          case "Search Text":
+            instance.UI.disableFeatures([instance.Feature.Measurement]);
+            instance.UI.enableElements(["header"]);
+            instance.UI.closeElements(["notesPanel"]);
+            instance.UI.closeElements(["leftPanel"]);
+            instance.UI.setToolbarGroup("toolbarGroup-View");
+            instance.UI.openElements(["searchPanel"]);
+            break;
+          case "Measure Distances":
+            instance.UI.enableFeatures([instance.Feature.Measurement]);
+            instance.UI.closeElements(["notesPanel"]);
+            instance.UI.closeElements(["leftPanel"]);
+            instance.UI.closeElements(["searchPanel"]);
+            instance.UI.setToolbarGroup("toolbarGroup-Measure");
+            break;
+          case "Annotate Documents":
+            instance.UI.disableFeatures([instance.Feature.Measurement]);
+            instance.UI.enableElements(["header"]);
+            instance.UI.closeElements(["notesPanel"]);
+            instance.UI.closeElements(["leftPanel"]);
+            instance.UI.closeElements(["searchPanel"]);
+            instance.UI.setToolbarGroup("toolbarGroup-Annotate");
+            break;
+          case "Save Documents":
+            instance.UI.disableFeatures([instance.Feature.Measurement]);
+            instance.UI.enableElements(["header"]);
+            instance.UI.closeElements(["notesPanel"]);
+            instance.UI.closeElements(["leftPanel"]);
+            instance.UI.closeElements(["searchPanel"]);
+            instance.UI.setToolbarGroup("toolbarGroup-Annotate");
+            break;
+          case "Replace Content":
+            instance.UI.disableFeatures([instance.Feature.Measurement]);
+            instance.UI.enableElements(["header"]);
+            instance.UI.closeElements(["notesPanel"]);
+            instance.UI.closeElements(["leftPanel"]);
+            instance.UI.closeElements(["searchPanel"]);
+            instance.UI.setToolbarGroup("toolbarGroup-View");
+            break;
+          case "Redact Content":
+            instance.UI.disableFeatures([instance.Feature.Measurement]);
+            instance.UI.enableElements(["header"]);
+            instance.UI.closeElements(["notesPanel"]);
+            instance.UI.closeElements(["leftPanel"]);
+            instance.UI.closeElements(["searchPanel"]);
+            instance.UI.setToolbarGroup("toolbarGroup-Edit");
+            instance.UI.setToolMode(Tools.ToolNames.REDACTION);
+            break;
+          case "Edit Page(s)":
+            instance.UI.disableFeatures([instance.Feature.Measurement]);
+            instance.UI.enableElements(["header"]);
+            instance.UI.openElements(["leftPanel"]);
+            instance.UI.closeElements(["searchPanel"]);
+            instance.UI.closeElements(["notesPanel"]);
+            instance.UI.setToolbarGroup("toolbarGroup-View");
+            break;
+          case "Sign Documents":
+            instance.UI.disableFeatures([instance.Feature.Measurement]);
+            instance.UI.enableElements(["header"]);
+            instance.UI.closeElements(["notesPanel"]);
+            instance.UI.closeElements(["leftPanel"]);
+            instance.UI.closeElements(["searchPanel"]);
+            instance.UI.setToolbarGroup("toolbarGroup-FillAndSign");
+            break;
+          case "Form Fields":
+            instance.UI.disableFeatures([instance.Feature.Measurement]);
+            instance.UI.enableElements(["header"]);
+            instance.UI.closeElements(["notesPanel"]);
+            instance.UI.closeElements(["leftPanel"]);
+            instance.UI.closeElements(["searchPanel"]);
+            instance.UI.setToolbarGroup("toolbarGroup-Forms");
+            break;
+          case "Crop Documents":
+            instance.UI.disableFeatures([instance.Feature.Measurement]);
+            instance.UI.enableElements(["header"]);
+            instance.UI.closeElements(["notesPanel"]);
+            instance.UI.closeElements(["leftPanel"]);
+            instance.UI.closeElements(["searchPanel"]);
+            instance.UI.setToolbarGroup("toolbarGroup-Edit");
+            instance.UI.setToolMode(Tools.ToolNames.CROP);
+            break;
+          case "Collaborate - Comments, Mentions, Approvals":
+            instance.UI.disableFeatures([instance.Feature.Measurement]);
+            instance.UI.enableElements(["header"]);
+            instance.UI.closeElements(["leftPanel"]);
+            instance.UI.closeElements(["searchPanel"]);
+            instance.UI.openElements(["notesPanel"]);
+            instance.UI.setToolbarGroup("toolbarGroup-Annotate");
+            break;
+          default:
+            instance.UI.disableFeatures([instance.Feature.Measurement]);
+            instance.UI.closeElements(["notesPanel"]);
+            instance.UI.closeElements(["leftPanel"]);
+            instance.UI.closeElements(["searchPanel"]);
+            instance.UI.setToolbarGroup("toolbarGroup-View");
+            instance.UI.disableElements(["header"]);
+            break;
+        }
+        break;
       case "OPEN_DOCUMENT":
         instance.loadDocument(event.data.file);
         break;

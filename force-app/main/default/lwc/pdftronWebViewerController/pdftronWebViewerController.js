@@ -2,7 +2,6 @@ import { LightningElement, track, wire, api } from "lwc";
 import { CurrentPageReference } from "lightning/navigation";
 import { fireEvent } from "c/pubsub";
 import getAttachments from "@salesforce/apex/PDFTron_ContentVersionController.getAttachments";
-import getPdfAsBlobFromUrl from "@salesforce/apex/PDFTron_ContentVersionController.getPdfAsBlobFromUrl";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import {
   publish,
@@ -32,12 +31,13 @@ export default class PdftronContentReplacer extends NavigationMixin(
   error;
 
   //conditional rendering
+  @track filePicker = false;
   @track renderSearch = false;
   @track renderReplace = false;
   @track renderRedact = false;
   @track renderVideo = false;
 
-  @track title = "Open Documents";
+  @track title = "View Documents";
   @track value = "";
   @track searchTerm = "[Company Name]";
   @track replaceTerm = "PDFTron Systems Inc.";
@@ -51,32 +51,10 @@ export default class PdftronContentReplacer extends NavigationMixin(
   @api recordId;
   @wire(CurrentPageReference) pageRef;
 
-  @wire(getAttachments, { recordId: "$recordId" })
-  attachments({ error, data }) {
-    if (data) {
-      data.forEach((attachmentRecord) => {
-        var name =
-          attachmentRecord.cv.Title + "." + attachmentRecord.cv.FileExtension;
-        const option = {
-          label: name,
-          value: JSON.stringify(attachmentRecord),
-        };
-        this.picklistOptions = [...this.picklistOptions, option];
-      });
-      error = undefined;
-      this.loadFinished = true;
-    } else if (error) {
-      console.error(error);
-      this.error = error;
-      this.picklistOptions = undefined;
-      let def_message =
-        "We have encountered an error while loading up your document. ";
-
-      this.showNotification("Error", def_message + error.body.message, "error");
-    }
-  }
   connectedCallback() {
     this.handleSubscribe();
+
+    this.loadFinished = true;
   }
 
   disconnectedCallback() {
@@ -149,7 +127,7 @@ export default class PdftronContentReplacer extends NavigationMixin(
 
     //validate
     this.template.querySelectorAll("lightning-input").forEach((element) => {
-      element.reportValidity();
+      //element.reportValidity();
     });
 
     if (this.replaceTerm) {
@@ -173,33 +151,102 @@ export default class PdftronContentReplacer extends NavigationMixin(
       if (message) {
         console.log(message);
         this.title = message.messageBody;
+        fireEvent(this.pageRef, "ribbon", this.title);
 
         switch (this.title) {
           case "Search Text":
+            this.filePicker = true;
             this.renderSearch = true;
             this.renderRedact = false;
             this.renderReplace = false;
             this.renderVideo = false;
             break;
+          case "Open Documents":
+            this.filePicker = true;
+            this.renderSearch = false;
+            this.renderRedact = false;
+            this.renderReplace = false;
+            this.renderVideo = false;
+            break;
+          case "Annotate Documents":
+            this.filePicker = true;
+            this.renderSearch = false;
+            this.renderRedact = false;
+            this.renderReplace = false;
+            this.renderVideo = false;
+            break;
+          case "Save Documents":
+            this.filePicker = true;
+            this.renderSearch = false;
+            this.renderRedact = false;
+            this.renderReplace = false;
+            this.renderVideo = false;
+            break;
           case "Replace Content":
+            this.filePicker = true;
             this.renderSearch = true;
             this.renderRedact = false;
             this.renderReplace = true;
             this.renderVideo = false;
             break;
           case "Redact Content":
+            this.filePicker = true;
             this.renderSearch = true;
             this.renderRedact = true;
             this.renderReplace = false;
             this.renderVideo = false;
             break;
+          case "Sign Documents":
+            this.filePicker = true;
+            this.renderSearch = false;
+            this.renderRedact = false;
+            this.renderReplace = false;
+            this.renderVideo = false;
+            break;
+          case "Edit Page(s)":
+            this.filePicker = true;
+            this.renderSearch = false;
+            this.renderRedact = false;
+            this.renderReplace = false;
+            this.renderVideo = false;
+            break;
+          case "Form Fields":
+            this.filePicker = true;
+            this.renderSearch = false;
+            this.renderRedact = false;
+            this.renderReplace = false;
+            this.renderVideo = false;
+            break;
+          case "Crop Documents":
+            this.filePicker = true;
+            this.renderSearch = false;
+            this.renderRedact = false;
+            this.renderReplace = false;
+            this.renderVideo = false;
+            break;
+          case "Collaborate - Comments, Mentions, Approvals":
+            this.filePicker = true;
+            this.renderSearch = false;
+            this.renderRedact = false;
+            this.renderReplace = false;
+            this.renderVideo = false;
+            break;
+          case "Measure Distances":
+            this.filePicker = true;
+            this.renderSearch = false;
+            this.renderRedact = false;
+            this.renderReplace = false;
+            this.renderVideo = false;
+            break;
           case "Video":
+            this.filePicker = false;
             this.renderSearch = false;
             this.renderRedact = false;
             this.renderReplace = false;
             this.renderVideo = true;
             break;
           default:
+            this.filePicker = false;
             this.renderSearch = false;
             this.renderRedact = false;
             this.renderReplace = false;
@@ -225,26 +272,5 @@ export default class PdftronContentReplacer extends NavigationMixin(
     this.loadFinished = false;
     fireEvent(this.pageRef, "search", searchTerm);
     this.loadFinished = true;
-  }
-
-  //attachment picker change handler
-  handleChange(event) {
-    this.loadFinished = false;
-    this.value = event.detail.value;
-    fireEvent(this.pageRef, "blobSelected", this.value);
-    this.loadFinished = true;
-  }
-
-  onFileUpload(event) {
-    if (event.target.files.length > 0) {
-      this.uploadedFiles = event.target.files;
-      this.fileName = event.target.files[0].name;
-      this.file = this.uploadedFiles[0];
-      if (this.file.size > this.MAX_FILE_SIZE) {
-        alert(
-          `File Size Can not exceed ${MAX_FILE_SIZE}. Your file's size is ${this.file.size}`
-        );
-      }
-    }
   }
 }

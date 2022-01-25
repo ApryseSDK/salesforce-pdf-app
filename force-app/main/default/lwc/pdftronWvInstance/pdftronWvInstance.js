@@ -15,6 +15,9 @@ import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import mimeTypes from "./mimeTypes";
 import { registerListener, unregisterAllListeners } from "c/pubsub";
 import saveDocument from "@salesforce/apex/PDFTron_ContentVersionController.saveDocument";
+import getUser from "@salesforce/apex/PDFTron_ContentVersionController.getUser";
+getUsers;
+import getUsers from "@salesforce/apex/PDFTron_ContentVersionController.getUsers";
 
 function _base64ToArrayBuffer(base64) {
   var binary_string = window.atob(base64);
@@ -38,6 +41,9 @@ export default class PdftronWvInstance extends LightningElement {
   enableRedaction = true;
   @api recordId;
 
+  username;
+  users = [];
+
   @wire(CurrentPageReference)
   pageRef;
 
@@ -51,6 +57,7 @@ export default class PdftronWvInstance extends LightningElement {
     this.handleSubscribe();
     registerListener("blobSelected", this.handleBlobSelected, this);
     registerListener("search", this.search, this);
+    registerListener("ribbon", this.handleRibbon, this);
     registerListener("video", this.loadVideo, this);
     registerListener("replace", this.contentReplace, this);
     registerListener("redact", this.contentRedact, this);
@@ -86,8 +93,19 @@ export default class PdftronWvInstance extends LightningElement {
     unsubscribe(this.channel);
   }
 
+  handleRibbon(ribbon) {
+    this.iframeWindow.postMessage(
+      { type: "RIBBON_CHANGE", ribbon },
+      window.origin
+    );
+  }
+
   contentReplace(payload) {
-    this.iframeWindow.postMessage({ type: "REPLACE_CONTENT", payload }, "*");
+    const origin = window.origin + "/" + this.recordId;
+    this.iframeWindow.postMessage(
+      { type: "REPLACE_CONTENT", payload, origin: origin },
+      window.origin
+    );
   }
 
   contentRedact() {
@@ -115,8 +133,6 @@ export default class PdftronWvInstance extends LightningElement {
   }
 
   handleBlobSelected(record) {
-    record = JSON.parse(record);
-
     var blobby = new Blob([_base64ToArrayBuffer(record.body)], {
       type: mimeTypes[record.FileExtension],
     });
@@ -138,8 +154,42 @@ export default class PdftronWvInstance extends LightningElement {
     this.uiInitialized = true;
 
     Promise.all([loadScript(self, libUrl + "/webviewer.min.js")])
-      .then(() => this.initUI())
+      .then(() => this.handleMentions())
+      .then(() => this.handleInitWithCurrentUser())
       .catch(console.error);
+  }
+
+  handleMentions() {
+    getUsers()
+      .then((result) => {
+        console.log(result);
+        result.forEach((user) => {
+          let current = {
+            value: user.FirstName + " " + user.LastName,
+            email: user.Email,
+          };
+
+          this.users = [...this.users, current];
+        });
+      })
+      .catch((error) => {
+        console.error(error);
+        this.showNotification("Error", error.body.message, "error");
+      });
+  }
+
+  handleInitWithCurrentUser() {
+    getUser()
+      .then((result) => {
+        this.username = result;
+        this.error = undefined;
+
+        this.initUI();
+      })
+      .catch((error) => {
+        console.error(error);
+        this.showNotification("Error", error.body.message, "error");
+      });
   }
 
   initUI() {
@@ -147,6 +197,8 @@ export default class PdftronWvInstance extends LightningElement {
       libUrl: libUrl,
       fullAPI: this.fullAPI || false,
       namespacePrefix: "",
+      username: this.username,
+      userlist: JSON.stringify(this.users),
     };
     var url = myfilesUrl + "/webviewer-demo-annotated.pdf";
 
