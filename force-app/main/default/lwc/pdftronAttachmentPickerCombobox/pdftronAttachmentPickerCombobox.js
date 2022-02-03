@@ -22,6 +22,10 @@ export default class PdftronAttachmentPickerCombobox extends LightningElement {
   @wire(CurrentPageReference) pageRef;
 
   renderedCallback() {
+    if(!this.recordId) {
+      this.loadFinished = true;
+      return
+    }
     if (!this.documentsRetrieved) {
       getAttachments({ recordId: this.recordId })
         .then((data) => {

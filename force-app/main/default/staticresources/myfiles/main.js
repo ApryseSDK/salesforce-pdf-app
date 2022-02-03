@@ -8374,9 +8374,9 @@ object-assign
               return (
                 $stringify([symbol]) != "[null]" ||
                 // WebKit converts symbol values to JSON as null
-                $stringify({ a: symbol }) != "{}" ||
+                $stringify({ a: symbol }) != {} ||
                 // V8 throws on boxed symbols
-                $stringify(Object(symbol)) != "{}"
+                $stringify(Object(symbol)) != {}
               );
             });
 
@@ -10646,8 +10646,8 @@ object-assign
         var pathPercentEncodeSet = assign({}, fragmentPercentEncodeSet, {
           "#": 1,
           "?": 1,
-          "{": 1,
-          "}": 1,
+          {": 1,
+          "}: 1,
         });
         var userinfoPercentEncodeSet = assign({}, pathPercentEncodeSet, {
           "/": 1,
@@ -23683,7 +23683,7 @@ object-assign
                 C(
                   31,
                   "[object Object]" === c
-                    ? "object with keys {" + Object.keys(a).join(", ") + "}"
+                    ? "object with keys {" + Object.keys(a).join(", ") + "}
                     : c,
                   ""
                 )
@@ -27642,7 +27642,7 @@ object-assign
               u(
                 31,
                 "[object Object]" === Object.prototype.toString.call(b)
-                  ? "object with keys {" + Object.keys(b).join(", ") + "}"
+                  ? "object with keys {" + Object.keys(b).join(", ") + "}
                   : b,
                 ""
               )
@@ -32399,7 +32399,7 @@ object-assign
               var content = cssWithMappingToString(item, useSourceMap);
 
               if (item[2]) {
-                return "@media ".concat(item[2], " {").concat(content, "}");
+                return "@media ".concat(item[2], " {").concat(content, "});
               }
 
               return content;
@@ -35513,7 +35513,7 @@ object-assign
         function hexToRgb(color) {
           color = color.substr(1);
           var re = new RegExp(
-            ".{1,".concat(color.length >= 6 ? 2 : 1, "}"),
+            ".{1,".concat(color.length >= 6 ? 2 : 1, "}),
             "g"
           );
           var colors = color.match(re);
@@ -36034,7 +36034,7 @@ object-assign
           indent--;
           if (result) result = "\n" + result + "\n";
           return (
-            indentStr(selector + " {" + result, indent) + indentStr("}", indent)
+            indentStr(selector + " {" + result, indent) + indentStr("}, indent)
           );
         }
 
@@ -36317,11 +36317,11 @@ object-assign
                 options.children = defaultToStringOptions.children;
 
               if (options.children === false) {
-                return this.query + " {}";
+                return this.query + " {};
               }
 
               var children = this.rules.toString(options);
-              return children ? this.query + " {\n" + children + "\n}" : "";
+              return children ? this.query + " {\n" + children + "\n} : "";
             };
 
             return ConditionalRule;
@@ -36410,12 +36410,12 @@ object-assign
                 options.children = defaultToStringOptions$1.children;
 
               if (options.children === false) {
-                return this.at + " " + this.id + " {}";
+                return this.at + " " + this.id + " {};
               }
 
               var children = this.rules.toString(options);
               if (children) children = "\n" + children + "\n";
-              return this.at + " " + this.id + " {" + children + "}";
+              return this.at + " " + this.id + " {" + children + "};
             };
 
             return KeyframesRule;

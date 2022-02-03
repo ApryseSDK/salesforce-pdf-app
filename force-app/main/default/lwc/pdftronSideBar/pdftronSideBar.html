@@ -3,15 +3,14 @@
     <div>
       <lightning-accordion
         class="slds-var-p-left_xx-small"
-        onsectiontoggle="{handleToggleSection}"
+        onsectiontoggle={handleToggleSection}
       >
         <lightning-accordion-section name="View Documents" label="View">
           <p class="slds-p-around_x-small">
             You can view the default document on the right hand side. Use
             'initialDoc' to pass a default document via URL to the constructor
             or load it via the 'viewerLoaded' event.<br /><br />Learn more about
-            WebViewer at
-            <a href="https://www.pdftron.com/salesforce/" target="_blank"
+            WebViewer at <a href="https://www.pdftron.com/salesforce/" target="_blank"
               >pdftron.com</a
             >.
           </p>
@@ -20,8 +19,7 @@
           <p class="slds-p-around_x-small">
             Open an attachment by selecting a file on the right hand side or
             type to search through all your files.<br /><br />
-            WebViewer has support for
-            <a
+            WebViewer has support for <a
               href="https://www.pdftron.com/pdf-sdk/supported-file-formats/"
               target="_blank"
               >30+ file formats</a
@@ -32,8 +30,7 @@
             limits/heap size, resulting in a max file size. To load files up to
             2GB in size, pass a URL or use data chunking when possible.
             <br /><br />
-            You can learn more about the heap size governor limit
-            <a
+            You can learn more about the heap size governor limit <a
               href="https://help.salesforce.com/s/articleView?id=000321537&type=1"
               target="_blank"
               >here</a
@@ -49,12 +46,18 @@
             You can implement custom logic by using the 'annotationChanged'
             event to save annotations to a custom object, notify users, or
             implement your own custom logic for annotations. View all annotation
-            events
-            <a
+            events <a
               href="https://www.pdftron.com/documentation/web/guides/annotation-events/"
               target="_blank"
               >here</a
             >.
+          </p>
+        </lightning-accordion-section>
+        <lightning-accordion-section name="Edit Page(s)" label="Arrange">
+          <p class="slds-p-around_x-small">
+            Use the left panel to re-arrange pages via drag and drop.<br /><br />
+            You can also rotate pages, delete pages or extract a subset of
+            pages.
           </p>
         </lightning-accordion-section>
         <lightning-accordion-section
@@ -64,20 +67,12 @@
           <p class="slds-p-around_x-small">
             Use the comments panel to comment on documents, reply to comments,
             mention users, approve/reject comments and more. <br /><br />
-            You can make a custom list of mentions using the
-            <a
+            You can make a custom list of mentions using the <a
               href="https://www.pdftron.com/documentation/web/guides/mentions-api/"
               target="_blank"
               >Mentions API</a
             >. You can use the 'mentionChanged' event to notify your users via
             Email or Chatter API.
-          </p>
-        </lightning-accordion-section>
-        <lightning-accordion-section name="Edit Page(s)" label="Edit">
-          <p class="slds-p-around_x-small">
-            Use the left panel to re-arrange pages via drag and drop.<br /><br />
-            You can also rotate pages, delete pages or extract a subset of
-            pages.
           </p>
         </lightning-accordion-section>
         <lightning-accordion-section name="Form Fields" label="Forms">
@@ -96,9 +91,7 @@
           <p class="slds-p-around_x-small">
             Use the measurement tool to measure distances on your document. You
             can also measure circumference, areas and more.<br /><br />
-            Check out the documentation for our
-            <a
-              href="https://www.pdftron.com/documentation/web/guides/measurement/"
+            Check out the documentation for our <a href="https://www.pdftron.com/documentation/web/guides/measurement/"
               target="_blank"
               >Measurement API</a
             >.
@@ -132,8 +125,7 @@
             You can save larger files when storing documents outside of
             Salesforce or by creating a ContentVersion record via Salesforce's
             REST API. <br /><br />
-            You can learn more about the heap size governor limit
-            <a
+            You can learn more about the heap size governor limit <a
               href="https://help.salesforce.com/s/articleView?id=000321537&type=1"
               target="_blank"
               >here</a
@@ -144,8 +136,7 @@
           <p class="slds-p-around_x-small">
             Search text by typing into the search box or by using the search
             panel in the WebViewer UI. Press enter or stop typing to fire the
-            search event when
-            <a
+            search event when <a
               href="https://www.pdftron.com/documentation/web/guides/text-search/"
               target="_blank"
               >searching programmatically</a
@@ -164,13 +155,11 @@
         </lightning-accordion-section>
         <lightning-accordion-section name="Repo" label="Source Code">
           <p class="slds-p-around_x-small">
-            You can view the source code
-            <a
+            You can view the source code <a
               href="https://github.com/PDFTron/salesforce-pdf-app"
               target="_blank"
               >here</a
-            >.<br /><br />Learn more about WebViewer at
-            <a href="https://www.pdftron.com/salesforce/" target="_blank"
+            >.<br /><br />Learn more about WebViewer at <a href="https://www.pdftron.com/salesforce/" target="_blank"
               >pdftron.com</a
             >.
           </p>

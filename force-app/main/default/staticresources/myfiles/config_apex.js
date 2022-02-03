@@ -35,9 +35,24 @@ Core.setCustomFontURL(
   "https://pdftron.s3.amazonaws.com/custom/ID-zJWLuhTffd3c/vlocity/webfontsv20/"
 );
 
+const redactionSearchSamples = [
+  {
+    key: "phone",
+    value: `\\d?(\\s?|-?|\\+?|\\.?)((\\(\\d{1,4}\\))|(\\d{1,3})|\\s?)(\\s?|-?|\\.?)((\\(\\d{1,3}\\))|(\\d{1,3})|\\s?)(\\s?|-?|\\.?)((\\(\\d{1,3}\\))|(\\d{1,3})|\\s?)(\\s?|-?|\\.?)\\d{3}(-|\\.|\\s)\\d{4,5}`,
+  },
+  {
+    key: "email",
+    value: `\\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,6}\\b`,
+  },
+  {
+    key: "date",
+    value: "(\\b(0?[1-9]|[12]\\d|30|31)[^\\w\\d\\r\\n:](0?[1-9]|1[0-2])[^\\w\\d\\r\\n:](\\d{4}|\\d{2})\\b)|(\\b(0?[1-9]|1[0-2])[^\\w\\d\\r\\n:](0?[1-9]|[12]\\d|30|31)[^\\w\\d\\r\\n:](\\d{4}|\\d{2})\\b)",
+  },
+];
+
 async function saveDocument() {
-  const docViewer = instance.Core.documentViewer;
-  const doc = docViewer.getDocument();
+  const documentViewer = instance.Core.documentViewer;
+  const doc = documentViewer.getDocument();
   if (!doc) {
     return;
   }
@@ -49,7 +64,7 @@ async function saveDocument() {
 
   // xfdf string can be saved to a custom object
   // to achieve this fire event to LWC here, and pass data to apex
-  const xfdfString = await docViewer.getAnnotationManager().exportAnnotations();
+  const xfdfString = await documentViewer.getAnnotationManager().exportAnnotations();
 
   //flatten document to include annotations
   const data = await doc.getFileData({
@@ -102,8 +117,23 @@ async function addSaveButton() {
   });
 }
 
+async function getBase64FromUrl(url, token){
+  const data = await fetch(url, {"headers": {
+      "Authorization" : "Bearer " + token
+  }});
+  const blob = await data.blob();
+  return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(blob); 
+      reader.onloadend = function() {
+          const base64data = reader.result;   
+          resolve(base64data.split(",")[1]);
+      }
+  });
+}
+
 async function replaceContent(searchString, replacementString) {
-  const docViewer = instance.Core.documentViewer;
+  const documentViewer = instance.Core.documentViewer;
   const doc = instance.Core.documentViewer.getDocument(); //get current document from WV
   if (!doc) {
     return;
@@ -124,15 +154,15 @@ async function replaceContent(searchString, replacementString) {
       searchString.slice(-1)
     );
     await replacer.addString(searchString.slice(1, -1), replacementString);
-    for (var i = 1; i <= docViewer.getPageCount(); ++i) {
+    for (var i = 1; i <= documentViewer.getPageCount(); ++i) {
       const page = await PDFdoc.getPage(i);
       await replacer.process(page);
     }
   });
 
-  docViewer.refreshAll();
-  docViewer.updateView();
-  docViewer.getDocument().refreshTextData();
+  documentViewer.refreshAll();
+  documentViewer.updateView();
+  documentViewer.getDocument().refreshTextData();
 }
 
 window.addEventListener("viewerLoaded", async function () {
@@ -319,6 +349,33 @@ function receiveMessage(event) {
         setTimeout(() => {
           instance.closeElements(["errorModal", "loadingModal"]);
         }, 2000);
+        break;
+      case 'REDACT_CONTENT_PHONE':
+        instance.showErrorMessage('Searching for phone numbers');
+        documentViewer.clearSearchResults();
+        instance.addSearchListener(searchListener);
+        instance.searchTextFull(redactionSearchSamples[0].value, { regex: true });
+        setTimeout(() => {
+          instance.closeElements(['errorModal', 'loadingModal'])
+        }, 2000)
+        break;
+      case 'REDACT_CONTENT_EMAIL':
+        instance.showErrorMessage('Searching for emails');
+        documentViewer.clearSearchResults();
+        instance.addSearchListener(searchListener);
+        instance.searchTextFull(redactionSearchSamples[1].value, { regex: true });
+        setTimeout(() => {
+          instance.closeElements(['errorModal', 'loadingModal'])
+        }, 2000)
+        break;
+      case 'REDACT_CONTENT_DTM':
+        instance.showErrorMessage('Searching for dates');
+        documentViewer.clearSearchResults();
+        instance.addSearchListener(searchListener);
+        instance.searchTextFull(redactionSearchSamples[2].value, { regex: true });
+        setTimeout(() => {
+          instance.closeElements(['errorModal', 'loadingModal'])
+        }, 2000)
         break;
       case "LMS_RECEIVED":
         instance.showErrorMessage("Link received: " + event.data.message);

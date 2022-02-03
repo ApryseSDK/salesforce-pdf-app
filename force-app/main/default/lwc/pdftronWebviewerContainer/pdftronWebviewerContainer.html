@@ -1,16 +1,14 @@
 <template>
-  <div class="viewerCard slds-card">
-    <div class="slds-grid">
-      <div class="slds-col slds-size_2-of-12">
-        <c-pdftron-side-bar></c-pdftron-side-bar>
-      </div>
-      <div class="slds-col slds-size_10-of-12">
-        <div id="comboboxContainer">
-          <c-pdftron-web-viewer-controller
-            record-id="{recordId}"
-          ></c-pdftron-web-viewer-controller>
+    <div class="viewerCard slds-card">
+        <div class="slds-grid">
+            <div class="slds-col slds-size_2-of-12">
+                <c-pdftron-side-bar></c-pdftron-side-bar>
+            </div>
+            <div class="slds-col slds-size_10-of-12">
+                <div id="comboboxContainer">
+                    <c-pdftron-web-viewer-controller record-id={recordId}></c-pdftron-web-viewer-controller>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </div>
 </template>

@@ -1,5 +1,5 @@
 <template>
-  <template if:false="{loadFinished}">
+  <template if:false={loadFinished}>
     <div class="spinnerContainer">
       <lightning-spinner
         alternative-text="Loading"
@@ -14,95 +14,94 @@
       {title}
     </div>
     <div class="slds-var-p-around_xx-small slds-grid">
-      <template if:true="{filePicker}">
+      <template if:true={filePicker}>
         <div
           id="attachmentCombobox"
-          class="slds-col slds-p-left_x-small slds-p-right_x-small slds-p-top_x-small slds-size_3-of-4"
+          class="slds-col slds-p-left_x-small slds-p-right_x-small slds-p-top_x-small slds-size_4-of-4"
         >
           <c-pdftron-attachment-picker-combobox
-            record-id="{recordId}"
+            record-id={recordId}
           ></c-pdftron-attachment-picker-combobox>
         </div>
       </template>
     </div>
     <div class="slds-var-p-left_xx-small slds-var-p-right_xx-small slds-grid">
-      <template if:true="{renderSearch}">
+      <template if:true={renderSearch}>
         <div
-          class="slds-col slds-size_3-of-4 slds-p-around_x-small"
-          onkeyup="{handleKeyUp}"
+          class="slds-col slds-size_4-of-4 slds-p-left_x-small slds-p-right_x-small slds-var-p-bottom_small"
+          onkeyup={handleKeyUp}
         >
           <lightning-input
             type="search"
             label="Search Text Programmatically"
-            value="{searchTerm}"
-            onchange="{handleSearch}"
+            value={searchTerm}
+            onchange={handleSearch}
             required
           >
           </lightning-input>
         </div>
       </template>
-      <template if:true="{renderRedact}">
-        <div class="slds-col slds-size_1-of-4 slds-p-top_x-large">
-          <lightning-button
-            variant="brand"
-            label="Redact All"
-            title="Redact Text"
-            onclick="{handleContentRedact}"
-          >
-          </lightning-button>
-        </div>
-      </template>
     </div>
-    <template if:true="{renderRedact}">
+    <template if:true={renderRedact}>
       <div class="slds-var-p-around_xx-small slds-grid">
         <div class="slds-col slds-size_4-of-4 slds-p-around_x-small">
           <lightning-button-group>
             <lightning-button
               label="Phone Numbers"
               icon-name="utility:call"
-              onclick="{handleContentRedactPhone}"
+              onclick={handleContentRedactPhone}
             ></lightning-button>
             <lightning-button
               label="Dates"
               icon-name="utility:key_dates"
-              onclick="{handleContentRedactDTM}"
+              onclick={handleContentRedactDTM}
             ></lightning-button>
             <lightning-button
               label="Emails"
               icon-name="utility:email"
-              onclick="{handleContentRedactEmail}"
+              onclick={handleContentRedactEmail}
             ></lightning-button>
           </lightning-button-group>
+
+          <div class="slds-float_right">
+            <lightning-button
+            variant="brand"
+            label="Redact All Marked Items"
+            title="Redact Text"
+            onclick={handleContentRedact}></lightning-button>
+          </div>
         </div>
       </div>
     </template>
-    <template if:true="{renderReplace}">
-      <div class="slds-var-p-around_xx-small slds-grid">
-        <div class="slds-col slds-size_3-of-4 slds-p-around_x-small">
-          <lightning-input
-            type="text"
-            label="Replace Text"
-            value="{replaceTerm}"
-            onchange="{handleReplace}"
-          >
-          </lightning-input>
-        </div>
-        <div class="slds-col slds-size_1-of-4 slds-p-top_x-large">
-          <lightning-button
-            variant="brand"
-            label="Replace All"
-            title="Replace Text"
-            onclick="{handleContentReplace}"
-          >
-          </lightning-button>
+    <template if:true={renderReplace}>
+      <div class="slds-col slds-size_1-of-1">
+        <div class="slds-var-p-around_xx-small slds-grid">
+          <div class="slds-col slds-size_10-of-12 slds-p-left_x-small slds-p-right_x-small">
+            <lightning-input
+              type="text"
+              label="Replace Text"
+              value={replaceTerm}
+              onchange={handleReplace}
+            >
+            </lightning-input>
+          </div>
+          <div class="slds-float_right slds-p-top_large">
+            <lightning-button
+              variant="brand"
+              label="Replace Text For All Marked Items"
+              title="Replace Text"
+              onclick={handleContentReplace}
+            >
+            </lightning-button>
+          </div>
         </div>
       </div>
     </template>
     <div
       id="wvContainer"
-      class="slds-var-p-left_small slds-var-p-right_small slds-var-p-bottom_small"
+      class="slds-card slds-var-p-left_small slds-var-p-right_small slds-var-p-bottom_small"
     >
-      <c-pdftron-wv-instance record-id="{recordId}"></c-pdftron-wv-instance>
+      <c-pdftron-wv-instance record-id={recordId}></c-pdftron-wv-instance>
     </div>
   </div>
 </template>

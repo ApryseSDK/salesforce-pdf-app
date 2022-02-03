@@ -33,7 +33,7 @@ export default class PdftronWvInstance extends LightningElement {
   config = "/config_apex.js";
 
   @track receivedMessage = "";
-  channel;
+  @track channel = null;
   context = createMessageContext();
 
   source = "My file";
@@ -64,6 +64,7 @@ export default class PdftronWvInstance extends LightningElement {
     registerListener("redactPhone", this.contentRedactPhone, this);
     registerListener("redactDTM", this.contentRedactDTM, this);
     registerListener("redactEmail", this.contentRedactEmail, this);
+    window.addEventListener('unload', this.unloadHandler,this);
     window.addEventListener(
       "message",
       this.handleReceiveMessage.bind(this),
@@ -153,7 +154,9 @@ export default class PdftronWvInstance extends LightningElement {
     }
     this.uiInitialized = true;
 
-    Promise.all([loadScript(self, libUrl + "/webviewer.min.js")])
+    Promise.all([
+      loadScript(self, libUrl + "/webviewer.min.js")
+    ])
       .then(() => this.handleMentions())
       .then(() => this.handleInitWithCurrentUser())
       .catch(console.error);
