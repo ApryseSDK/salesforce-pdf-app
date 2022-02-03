@@ -1,65 +1,186 @@
-import { LightningElement, track, wire, api } from 'lwc';
-import { CurrentPageReference } from 'lightning/navigation';
-import { fireEvent } from 'c/pubsub';
-import getAttachments from "@salesforce/apex/PDFTron_ContentVersionController.getAttachments";
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { LightningElement, track, wire, api } from "lwc";
+import { CurrentPageReference } from "lightning/navigation";
+import { fireEvent, registerListener, unregisterAllListeners } from "c/pubsub";
+import { ShowToastEvent } from "lightning/platformShowToastEvent";
+import getAttachments from "@salesforce/apex/PDFTron_ContentVersionController.getExistingAttachments";
+import getBase64FromCv from "@salesforce/apex/PDFTron_ContentVersionController.getBase64FromCv";
+import apexSearch from "@salesforce/apex/PDFTron_ContentVersionController.search";
+import getFileDataFromId from "@salesforce/apex/PDFTron_ContentVersionController.getFileDataFromId";
 
 export default class PdftronAttachmentPickerCombobox extends LightningElement {
-    error;
+  error;
 
-    @track value = '';
-    @track picklistOptions = [];
-    @track isSaving = false;
-    @track loadFinished = false;
-    @api recordId;
-    @wire(CurrentPageReference) pageRef;
+  @track isModalOpen = false;
 
-    @wire(getAttachments, {recordId: "$recordId"}) 
-    attachments({error, data}) {
-        if(data) {
-            data.forEach((attachmentRecord) => {
-                console.log(JSON.stringify(attachmentRecord));
-                var name = attachmentRecord.cv.Title + "." + attachmentRecord.cv.FileExtension;
-                const option = {
-                    label: name,
-                    value: JSON.stringify(attachmentRecord)
-                };
-                this.picklistOptions = [ ...this.picklistOptions, option ];
-            });
-            error = undefined;
-            this.loadFinished = true;
-        } else if (error) {
-            console.error(error);
-            this.error = error;
-            this.picklistOptions = undefined;
-            let def_message = 'We have encountered an error while loading up your document. '
+  @track value = "";
+  @track picklistOptions = [];
+  @track isSaving = false;
+  @track loadFinished = false;
+  documentsRetrieved = false;
+  @api recordId;
+  @track attachments = [];
+  @wire(CurrentPageReference) pageRef;
 
-            this.showNotification('Error', def_message + error.body.message, 'error');
-        }
-    };
+  renderedCallback() {
+    if(!this.recordId) {
+      this.loadFinished = true;
+      return
+    }
+    if (!this.documentsRetrieved) {
+      getAttachments({ recordId: this.recordId })
+        .then((data) => {
+          this.attachments = data;
+          this.initLookupDefaultResults();
 
-    showNotification(title, message, variant) {
-        const evt = new ShowToastEvent({
-            title: title,
-            message: message,
-            variant: variant,
+          this.error = undefined;
+          this.loadFinished = true;
+          this.documentsRetrieved = true;
+        })
+        .catch((error) => {
+          console.error(error);
+          this.loadFinished = true;
+          this.showNotification("Error", error, "error");
+          this.error = error;
         });
-        this.dispatchEvent(evt);
+    }
+  }
+
+  connectedCallback() {
+    registerListener("refreshOnSave", this.refreshOnSave, this);
+    this.initLookupDefaultResults();
+  }
+
+  disconnectedCallback() {
+    unregisterAllListeners(this);
+  }
+
+  showNotification(title, message, variant) {
+    const evt = new ShowToastEvent({
+      title: title,
+      message: message,
+      variant: variant,
+    });
+    this.dispatchEvent(evt);
+  }
+
+  initLookupDefaultResults() {
+    // Make sure that the lookup is present and if so, set its default results
+    const lookup = this.template.querySelector("c-lookup");
+    if (lookup) {
+      lookup.setDefaultResults(this.attachments);
+    }
+  }
+
+  handleSearch(event) {
+    const lookupElement = event.target;
+    apexSearch(event.detail)
+      .then((results) => {
+        lookupElement.setSearchResults(results);
+      })
+      .catch((error) => {
+        // TODO: handle error
+        this.error = error;
+        console.error(error);
+        let def_message =
+          "We have encountered an error while searching for your file  " +
+          event.detail +
+          "\n";
+
+        this.showNotification(
+          "Error",
+          def_message + error.body.message,
+          "error"
+        );
+      });
+  }
+
+  handleSingleSelectionChange(event) {
+    this.checkForErrors();
+
+    if (event.detail.length < 1) {
+      this.handleClose();
+      return;
     }
 
-    handleChange(event) {
-        this.value = event.detail.value;
-        fireEvent(this.pageRef, 'blobSelected', this.value);
-    }
+    this.isLoading = true;
 
-    submitDetails() {
-        this.isSaving = true;
-        this.saveData();
-    }
+    getFileDataFromId({ Id: event.detail[0] })
+      .then((result) => {
+        fireEvent(this.pageRef, "blobSelected", result);
+        this.isLoading = false;
+      })
+      .catch((error) => {
+        // TODO: handle error
+        this.error = error;
+        console.error(error);
+        this.isLoading = false;
+        let def_message =
+          "We have encountered an error while handling your file. ";
 
-    saveData() {
-        //saves current file
-        const data = new FormData();
-        data.append('mydoc.pdf', blob, 'mydoc.pdf');
+        this.showNotification(
+          "Error",
+          def_message + error.body.message,
+          "error"
+        );
+      });
+  }
+
+  //check for errors on selection
+  checkForErrors() {
+    this.errors = [];
+    const selection = this.template.querySelector("c-lookup").getSelection();
+    // Custom validation rule
+    if (this.isMultiEntry && selection.length > this.maxSelectionSize) {
+      this.errors.push({
+        message: `You may only select up to ${this.maxSelectionSize} items.`,
+      });
     }
+    // Enforcing required field
+    if (selection.length === 0) {
+      this.errors.push({ message: "Please make a selection." });
+    }
+  }
+
+  handleUploadFinished() {
+    this.showNotification(
+      "Success",
+      "Your file has been attached to " + this.recordId,
+      "success"
+    );
+    this.refreshOnSave();
+  }
+
+  refreshOnSave() {
+    this.loadFinished = false;
+    getAttachments({ recordId: this.recordId })
+      .then((data) => {
+        this.attachments = data;
+        this.initLookupDefaultResults();
+
+        this.error = undefined;
+        this.loadFinished = true;
+        this.documentsRetrieved = true;
+      })
+      .catch((error) => {
+        console.error(error);
+        this.showNotification("Error", error, "error");
+        this.error = error;
+      });
+  }
+
+  handleDownload() {
+    fireEvent(this.pageRef, "downloadDocument", "*");
+  }
+
+  handleClose() {
+    fireEvent(this.pageRef, "closeDocument", "*");
+  }
+
+  openModal() {
+    this.isModalOpen = true;
+  }
+
+  closeModal() {
+    this.isModalOpen = false;
+  }
 }
