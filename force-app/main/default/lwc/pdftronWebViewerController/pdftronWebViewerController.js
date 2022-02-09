@@ -36,6 +36,7 @@ export default class PdftronContentReplacer extends NavigationMixin(
   @track renderReplace = false;
   @track renderRedact = false;
   @track renderVideo = false;
+  @track renderConvert = false;
 
   @track title = "View Documents";
   @track value = "";
@@ -143,6 +144,12 @@ export default class PdftronContentReplacer extends NavigationMixin(
     }
   }
 
+  handleContentConvert() {
+    this.loadFinished = false;
+    fireEvent(this.pageRef, "convert", {});
+    this.loadFinished = true;
+  }
+
   handleSubscribe() {
     if (this.channel) {
       return;
@@ -160,6 +167,7 @@ export default class PdftronContentReplacer extends NavigationMixin(
             this.renderRedact = false;
             this.renderReplace = false;
             this.renderVideo = false;
+            this.renderConvert = false;
             break;
           case "Open Documents":
             this.filePicker = true;
@@ -167,6 +175,7 @@ export default class PdftronContentReplacer extends NavigationMixin(
             this.renderRedact = false;
             this.renderReplace = false;
             this.renderVideo = false;
+            this.renderConvert = false;
             break;
           case "Annotate Documents":
             this.filePicker = true;
@@ -174,6 +183,7 @@ export default class PdftronContentReplacer extends NavigationMixin(
             this.renderRedact = false;
             this.renderReplace = false;
             this.renderVideo = false;
+            this.renderConvert = false;
             break;
           case "Save Documents":
             this.filePicker = true;
@@ -181,6 +191,7 @@ export default class PdftronContentReplacer extends NavigationMixin(
             this.renderRedact = false;
             this.renderReplace = false;
             this.renderVideo = false;
+            this.renderConvert = false;
             break;
           case "Replace Content":
             this.filePicker = true;
@@ -188,6 +199,7 @@ export default class PdftronContentReplacer extends NavigationMixin(
             this.renderRedact = false;
             this.renderReplace = true;
             this.renderVideo = false;
+            this.renderConvert = false;
             break;
           case "Redact Content":
             this.filePicker = true;
@@ -195,6 +207,7 @@ export default class PdftronContentReplacer extends NavigationMixin(
             this.renderRedact = true;
             this.renderReplace = false;
             this.renderVideo = false;
+            this.renderConvert = false;
             break;
           case "Sign Documents":
             this.filePicker = true;
@@ -202,6 +215,7 @@ export default class PdftronContentReplacer extends NavigationMixin(
             this.renderRedact = false;
             this.renderReplace = false;
             this.renderVideo = false;
+            this.renderConvert = false;
             break;
           case "Edit Page(s)":
             this.filePicker = true;
@@ -209,6 +223,7 @@ export default class PdftronContentReplacer extends NavigationMixin(
             this.renderRedact = false;
             this.renderReplace = false;
             this.renderVideo = false;
+            this.renderConvert = false;
             break;
           case "Form Fields":
             this.filePicker = true;
@@ -216,6 +231,7 @@ export default class PdftronContentReplacer extends NavigationMixin(
             this.renderRedact = false;
             this.renderReplace = false;
             this.renderVideo = false;
+            this.renderConvert = false;
             break;
           case "Crop Documents":
             this.filePicker = true;
@@ -223,6 +239,7 @@ export default class PdftronContentReplacer extends NavigationMixin(
             this.renderRedact = false;
             this.renderReplace = false;
             this.renderVideo = false;
+            this.renderConvert = false;
             break;
           case "Collaborate - Comments, Mentions, Approvals":
             this.filePicker = true;
@@ -230,6 +247,7 @@ export default class PdftronContentReplacer extends NavigationMixin(
             this.renderRedact = false;
             this.renderReplace = false;
             this.renderVideo = false;
+            this.renderConvert = false;
             break;
           case "Measure Distances":
             this.filePicker = true;
@@ -237,6 +255,7 @@ export default class PdftronContentReplacer extends NavigationMixin(
             this.renderRedact = false;
             this.renderReplace = false;
             this.renderVideo = false;
+            this.renderConvert = false;
             break;
           case "Video":
             this.filePicker = false;
@@ -244,6 +263,15 @@ export default class PdftronContentReplacer extends NavigationMixin(
             this.renderRedact = false;
             this.renderReplace = false;
             this.renderVideo = true;
+            this.renderConvert = false;
+            break;
+          case "Convert Documents":
+            this.filePicker = true;
+            this.renderSearch = false;
+            this.renderRedact = false;
+            this.renderReplace = false;
+            this.renderVideo = false;
+            this.renderConvert = true;
             break;
           default:
             this.filePicker = false;
@@ -251,6 +279,7 @@ export default class PdftronContentReplacer extends NavigationMixin(
             this.renderRedact = false;
             this.renderReplace = false;
             this.renderVideo = false;
+            this.renderConvert = false;
             break;
         }
       }

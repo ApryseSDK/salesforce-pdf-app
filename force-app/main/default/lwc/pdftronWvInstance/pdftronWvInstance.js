@@ -39,6 +39,7 @@ export default class PdftronWvInstance extends LightningElement {
   source = "My file";
   fullAPI = true;
   enableRedaction = true;
+  payload;
   @api recordId;
 
   username;
@@ -56,6 +57,7 @@ export default class PdftronWvInstance extends LightningElement {
     ///servlet/servlet.FileDownload?file=documentId0694x000000pEGyAAM
     this.handleSubscribe();
     registerListener("blobSelected", this.handleBlobSelected, this);
+    registerListener('transportDocument', this.transportDocument, this);
     registerListener("search", this.search, this);
     registerListener("ribbon", this.handleRibbon, this);
     registerListener("video", this.loadVideo, this);
@@ -144,6 +146,9 @@ export default class PdftronWvInstance extends LightningElement {
       filename: record.cv.Title + "." + record.cv.FileExtension,
       documentId: record.cv.Id,
     };
+
+    this.payload = {...payload};
+    
     this.iframeWindow.postMessage({ type: "OPEN_DOCUMENT_BLOB", payload }, "*");
   }
 
@@ -219,6 +224,7 @@ export default class PdftronWvInstance extends LightningElement {
         enableRedaction: this.enableRedaction,
         enableMeasurement: this.enableMeasurement,
         // l: 'YOUR_LICENSE_KEY_HERE',
+        
       },
       viewerElement
     );
@@ -226,6 +232,25 @@ export default class PdftronWvInstance extends LightningElement {
     viewerElement.addEventListener("ready", () => {
       this.iframeWindow = viewerElement.querySelector("iframe").contentWindow;
     });
+  }
+
+  transportDocument(convert) {
+    if(this.payload != null){
+      const payload = {...this.payload};
+      payload.exportType = convert.value;
+      payload.transport = convert.transport;
+
+
+
+      if(convert.conform){
+        payload.conformType = convert.conform;
+        this.iframeWindow.postMessage({type: convert.transport, payload }, '*');
+      } else {
+        this.iframeWindow.postMessage({type: convert.transport, payload }, '*');
+      }
+    } else {
+      console.log('No file selected');
+    }
   }
 
   handleReceiveMessage(event) {

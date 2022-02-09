@@ -309,6 +309,7 @@ function receiveMessage(event) {
         instance.loadDocument(event.data.file);
         break;
       case "OPEN_DOCUMENT_BLOB":
+        console.log('hello');
         const { blob, extension, filename, documentId } = event.data.payload;
         instance.loadDocument(blob, { extension, filename, documentId });
         break;
@@ -386,8 +387,118 @@ function receiveMessage(event) {
       case "CLOSE_DOCUMENT":
         instance.closeDocument();
         break;
+      case 'EXPORT_DOCUMENT':
+        transportDocument(event.data.payload, true)
+        break;
+      case 'DOWNLOAD_DOCUMENT':
+        transportDocument(event.data.payload, false)
+        break;
       default:
         break;
     }
   }
+}
+
+function transportDocument(payload, transport){
+  switch (payload.exportType) {
+    case 'jpg':
+    case 'png':
+      // PDF to Image (png, jpg)
+      pdfToImage(payload, transport);
+      break;
+    case 'pdf':
+      // DOC, Images to PDF
+      toPdf(payload, transport);
+      break;
+  }
+}
+
+// Basic function that retrieves any viewable file from the viewer and downloads it as a pdf
+async function toPdf (payload, transport) {
+  if (transport){
+
+      await PDFNet.initialize();
+      const doc = instance.Core.documentViewer.getDocument();
+      const buffer = await doc.getFileData({ downloadType: payload.exportType });
+      const bufferFile = new Uint8Array(buffer);
+
+      exportFile(bufferFile, payload.file, "." + payload.exportType);
+
+  } else {
+
+    instance.downloadPdf({filename: payload.file});
+
+  }
+}
+
+
+const pdfToImage = async (payload, transport) => {
+
+  await PDFNet.initialize();
+
+  let doc = null;
+
+  await PDFNet.runWithCleanup(async () => {
+
+    const buffer = await payload.blob.arrayBuffer();
+    doc = await PDFNet.PDFDoc.createFromBuffer(buffer);
+    doc.initSecurityHandler();
+    doc.lock();
+
+    const count = await doc.getPageCount();
+    const pdfdraw = await PDFNet.PDFDraw.create(92);
+    
+    let itr;
+    let currPage;
+    let bufferFile;
+
+    // Handle multiple pages
+    for (let i = 1; i <= count; i++){
+
+      itr = await doc.getPageIterator(i);
+      currPage = await itr.current();
+      bufferFile = await pdfdraw.exportStream(currPage, payload.exportType.toUpperCase());
+      transport ? exportFile(bufferFile, payload.file, "." + payload.exportType) : downloadFile(bufferFile, payload.file, "." + payload.exportType);
+
+    }
+
+  }); 
+
+}
+
+// Master download method
+const downloadFile = (buffer, fileName, fileExtension) => {
+  const blob = new Blob([buffer]);
+  const link = document.createElement('a');
+  // create a blobURI pointing to our Blob
+  link.href = URL.createObjectURL(blob);
+  link.download = fileName + fileExtension;
+  // some browser needs the anchor to be in the doc
+  document.body.append(link);
+  link.click();
+  link.remove();
+  // in case the Blob uses a lot of memory
+  setTimeout(() => URL.revokeObjectURL(link.href), 7000);
+};
+
+function exportFile (buffer, fileName, fileExtension) {
+  const docLimit = 5 * Math.pow(1024, 2);
+  const fileSize = buffer.byteLength;
+
+  let binary = '';
+  for (let i = 0; i < buffer.byteLength; i++) {
+    binary += String.fromCharCode(buffer[i]);
+  }
+
+  const base64Data = window.btoa(binary);
+
+  const payload = {
+    title: fileName.replace(/\.[^/.]+$/, ""),
+    filename: fileName + fileExtension,
+    base64Data,
+    contentDocumentId: currentDocId
+  }
+  console.log(payload);
+  // Post message to LWC
+  fileSize < docLimit ? parent.postMessage({ type: 'SAVE_DOCUMENT', payload }, '*') : downloadFile(buffer, fileName, "." + fileExtension);
 }
