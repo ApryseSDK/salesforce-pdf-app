@@ -311,6 +311,7 @@ function receiveMessage(event) {
       case "OPEN_DOCUMENT_BLOB":
         console.log('hello');
         const { blob, extension, filename, documentId } = event.data.payload;
+        currentDocId = documentId;
         instance.loadDocument(blob, { extension, filename, documentId });
         break;
       case "DOCUMENT_SAVED":
@@ -399,6 +400,8 @@ function receiveMessage(event) {
   }
 }
 
+let currentDocId;
+
 function transportDocument(payload, transport){
   switch (payload.exportType) {
     case 'jpg':
@@ -421,6 +424,8 @@ async function toPdf (payload, transport) {
       const doc = instance.Core.documentViewer.getDocument();
       const buffer = await doc.getFileData({ downloadType: payload.exportType });
       const bufferFile = new Uint8Array(buffer);
+
+      console.log(payload);
 
       exportFile(bufferFile, payload.file, "." + payload.exportType);
 
@@ -480,6 +485,7 @@ const downloadFile = (buffer, fileName, fileExtension) => {
   // in case the Blob uses a lot of memory
   setTimeout(() => URL.revokeObjectURL(link.href), 7000);
 };
+
 
 function exportFile (buffer, fileName, fileExtension) {
   const docLimit = 5 * Math.pow(1024, 2);

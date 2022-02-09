@@ -150,22 +150,69 @@ export default class PdftronAttachmentPickerCombobox extends LightningElement {
     this.refreshOnSave();
   }
 
-  refreshOnSave() {
-    this.loadFinished = false;
-    getAttachments({ recordId: this.recordId })
-      .then((data) => {
-        this.attachments = data;
-        this.initLookupDefaultResults();
+  // refreshOnSave() {
+  //   this.loadFinished = false;
+  //   getAttachments({ recordId: this.recordId })
+  //     .then((data) => {
+  //       this.attachments = data;
+  //       this.initLookupDefaultResults();
 
-        this.error = undefined;
+  //       this.error = undefined;
+  //       this.loadFinished = true;
+  //       this.documentsRetrieved = true;
+  //     })
+  //     .catch((error) => {
+  //       console.error(error);
+  //       this.showNotification("Error", error, "error");
+  //       this.error = error;
+  //     });
+  // }
+
+  refreshOnSave () {
+    this.loadFinished = false;
+    this.attachments = []
+    getAttachments({ recordId: this.recordId })
+      .then(data => {
+        this.attachments = data
+        this.initLookupDefaultResults(data)
+
+        if(data[0]) {
+          const lookup = this.template.querySelector('c-lookup');
+          lookup.selection = data[0]
+
+          getFileDataFromId({ Id: data[0].id })
+          .then(result => {
+            fireEvent(this.pageRef, 'blobSelected', result)
+          })
+          .catch(error => {
+
+            // TODO: handle error
+            this.errors.push({
+              message: error.body.message
+            })
+            console.error(error)
+
+            let def_message =
+              'Oops, we hit a snag. '
+
+            this.showNotification(
+              def_message,
+              error.body.message,
+              'error'
+            )
+            //lookup.selection = undefined
+          })
+        }
+
         this.loadFinished = true;
-        this.documentsRetrieved = true;
+        this.error = undefined
+        this.documentsRetrieved = true
       })
-      .catch((error) => {
-        console.error(error);
-        this.showNotification("Error", error, "error");
-        this.error = error;
-      });
+      .catch(error => {
+        console.error(error)
+        this.showNotification('Error', error, 'error')
+        this.error = error
+      })
   }
 
   handleDownload() {

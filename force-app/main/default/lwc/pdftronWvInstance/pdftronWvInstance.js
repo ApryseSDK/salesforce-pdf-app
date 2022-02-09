@@ -143,12 +143,13 @@ export default class PdftronWvInstance extends LightningElement {
     const payload = {
       blob: blobby,
       extension: record.cv.FileExtension,
+      file: record.cv.Title,
       filename: record.cv.Title + "." + record.cv.FileExtension,
       documentId: record.cv.Id,
     };
 
     this.payload = {...payload};
-    
+
     this.iframeWindow.postMessage({ type: "OPEN_DOCUMENT_BLOB", payload }, "*");
   }
 
@@ -236,18 +237,12 @@ export default class PdftronWvInstance extends LightningElement {
 
   transportDocument(convert) {
     if(this.payload != null){
+
       const payload = {...this.payload};
       payload.exportType = convert.value;
       payload.transport = convert.transport;
+      this.iframeWindow.postMessage({type: convert.transport, payload }, '*');
 
-
-
-      if(convert.conform){
-        payload.conformType = convert.conform;
-        this.iframeWindow.postMessage({type: convert.transport, payload }, '*');
-      } else {
-        this.iframeWindow.postMessage({type: convert.transport, payload }, '*');
-      }
     } else {
       console.log('No file selected');
     }
@@ -271,6 +266,21 @@ export default class PdftronWvInstance extends LightningElement {
             .catch((error) => {
               console.error(JSON.stringify(error));
             });
+          break;
+        case "CONVERT_DOCUMENT":
+          const cvId = event.data.payload.contentDocumentId;
+          saveDocument({ json: JSON.stringify(event.data.payload), recordId: this.recordId ? this.recordId : '', cvId: cvId })
+          .then((response) => {
+            me.iframeWindow.postMessage({ type: 'DOCUMENT_SAVED', response }, '*')
+            fireEvent(this.pageRef, 'refreshOnSave', response);
+          })
+          .catch(error => {
+            me.iframeWindow.postMessage({ type: 'DOCUMENT_SAVED', error }, '*')
+            fireEvent(this.pageRef, 'refreshOnSave', error);
+            console.error(event.data.payload.contentDocumentId);
+            console.error(JSON.stringify(error));
+            this.showNotification('Error', error.body, 'error');
+          });
           break;
         default:
           break;

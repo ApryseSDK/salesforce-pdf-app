@@ -123,6 +123,56 @@ public with sharing class PDFTron_ContentVersionController {
     }
   }
 
+  @AuraEnabed 
+  public static String convertDocument(String json, String recordId, String cvId) {
+    try {
+      //parse annotated document payload and create new ContentVersion
+      PDFTron_ContentVersionPayload pl = new PDFTron_ContentVersionPayload(
+        json
+      );
+      ContentVersion annotatedCv = new ContentVersion();
+
+      //retrieve original document before annotation
+      List<ContentVersion> cvList = [
+        SELECT ContentDocumentId
+        FROM ContentVersion
+        WHERE Id = :cvId
+      ];
+
+      //build document blob
+      annotatedCv.VersionData = EncodingUtil.base64Decode(pl.base64Data);
+      annotatedCv.Title = pl.title;
+      annotatedCv.PathOnClient = pl.filename;
+
+      insert annotatedCv
+
+      if (
+        annotatedCv.ContentDocumentId == null && String.isNotBlank(recordId)
+      ) {
+        //get the content version since ContentDocumentId is defined after insert
+        List<ContentVersion> contentVersions = [
+          SELECT Id, ContentDocumentId
+          FROM ContentVersion
+          WHERE Id = :annotatedCv.Id
+          LIMIT 1
+        ];
+
+        //link record with document
+        ContentDocumentLink contentDocumentLink = new ContentDocumentLink(
+          LinkedEntityId = recordId,
+          ContentDocumentId = contentVersions[0].ContentDocumentId,
+          ShareType = 'V'
+        );
+        insert contentDocumentLink;
+      }
+
+      return annotatedCv.Id;
+    } catch (Exception e) {
+      system.debug('### ERROR: ' + e.getMessage());
+      throw new AuraHandledException(e.getMessage());
+    }
+  }
+
   @AuraEnabled
   public static List<ContentVersionWrapper> getAttachments(String recordId) {
     try {
