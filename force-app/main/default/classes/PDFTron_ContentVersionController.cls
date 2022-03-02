@@ -123,7 +123,7 @@ public with sharing class PDFTron_ContentVersionController {
     }
   }
 
-  @AuraEnabed 
+  @AuraEnabled 
   public static String convertDocument(String json, String recordId, String cvId) {
     try {
       //parse annotated document payload and create new ContentVersion
@@ -144,7 +144,7 @@ public with sharing class PDFTron_ContentVersionController {
       annotatedCv.Title = pl.title;
       annotatedCv.PathOnClient = pl.filename;
 
-      insert annotatedCv
+      insert annotatedCv;
 
       if (
         annotatedCv.ContentDocumentId == null && String.isNotBlank(recordId)

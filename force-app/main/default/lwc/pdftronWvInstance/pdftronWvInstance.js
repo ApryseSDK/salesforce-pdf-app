@@ -16,7 +16,6 @@ import mimeTypes from "./mimeTypes";
 import { registerListener, unregisterAllListeners } from "c/pubsub";
 import saveDocument from "@salesforce/apex/PDFTron_ContentVersionController.saveDocument";
 import getUser from "@salesforce/apex/PDFTron_ContentVersionController.getUser";
-getUsers;
 import getUsers from "@salesforce/apex/PDFTron_ContentVersionController.getUsers";
 
 function _base64ToArrayBuffer(base64) {
@@ -66,17 +65,14 @@ export default class PdftronWvInstance extends LightningElement {
     registerListener("redactPhone", this.contentRedactPhone, this);
     registerListener("redactDTM", this.contentRedactDTM, this);
     registerListener("redactEmail", this.contentRedactEmail, this);
+    registerListener('clearSelected', this.handleClearSelected, this);
     window.addEventListener('unload', this.unloadHandler,this);
-    window.addEventListener(
-      "message",
-      this.handleReceiveMessage.bind(this),
-      false
-    );
+    window.addEventListener("message", this.handleReceiveMessage);
   }
 
   disconnectedCallback() {
     unregisterAllListeners(this);
-    window.removeEventListener("message", this.handleReceiveMessage, true);
+    window.removeEventListener("message", this.handleReceiveMessage);
     this.handleUnsubscribe();
   }
 
@@ -248,7 +244,11 @@ export default class PdftronWvInstance extends LightningElement {
     }
   }
 
-  handleReceiveMessage(event) {
+  handleClearSelected() {
+    this.iframeWindow.postMessage({type: 'CLOSE_DOCUMENT' }, '*')
+  }
+
+  handleReceiveMessage = (event) => {
     const me = this;
     if (event.isTrusted && typeof event.data === "object") {
       switch (event.data.type) {

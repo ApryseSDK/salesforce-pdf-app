@@ -50,6 +50,11 @@ export default class PdftronAttachmentPickerCombobox extends LightningElement {
     this.initLookupDefaultResults();
   }
 
+  handleClearSelection () {
+    // clear exported options
+    fireEvent(this.pageRef, 'clearSelected');
+  }
+
   disconnectedCallback() {
     unregisterAllListeners(this);
   }
