@@ -50,6 +50,25 @@ const redactionSearchSamples = [
   },
 ];
 
+window.addEventListener('viewerLoaded', async function () {
+  window.addEventListener('documentLoaded', async () => {
+    const { documentViewer } = instance.Core;
+    console.log('document loaded!');
+
+    instance.UI.setLayoutMode(instance.UI.LayoutMode.FacingContinuous)
+
+    await documentViewer.getDocument().documentCompletePromise();
+    documentViewer.updateView();
+
+    const doc = documentViewer.getDocument();
+    const keys = doc.getTemplateKeys();
+
+    console.log("keys", keys);
+
+    parent.postMessage({ type: 'DOC_KEYS', keys }, '*');
+  });
+});
+
 async function saveDocument() {
   const documentViewer = instance.Core.documentViewer;
   const doc = documentViewer.getDocument();

@@ -282,6 +282,13 @@ export default class PdftronWvInstance extends LightningElement {
             this.showNotification('Error', error.body, 'error');
           });
           break;
+        case "DOC_KEYS":
+          let keys = event.data.keys;
+          console.log("keys", keys);
+
+          console.log("firing doc_gen_options");
+          fireEvent(this.pageRef, 'doc_gen_options', keys);
+          break;
         default:
           break;
       }

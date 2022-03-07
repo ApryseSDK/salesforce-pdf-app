@@ -1,4 +1,6 @@
 public with sharing class PDFTron_ContentVersionController {
+  private final static Integer MAX_RESULTS = 7;
+  
   static Set<String> supportedFileFormats = new Set<String>{
     'pdf',
     'xfdf',
@@ -365,6 +367,149 @@ public with sharing class PDFTron_ContentVersionController {
     //results.sort();
     return results;
   }
+
+  @AuraEnabled
+  public static String createCMTRecord(String jsonString){
+        try {
+            Map<String, Object> parsedData = (Map<String, Object>)JSON.deserializeUntyped(jsonString);
+            system.debug('##mappy: ' + parsedData);
+            Map<String, Object> cmt_map = new Map<String, Object>();
+            cmt_map.put('Mapping__c', String.valueOf(parsedData.get('mapping')));
+            cmt_map.put('sObject__c', parsedData.get('sObjectName'));
+            cmt_map.put('Template_Name__c', parsedData.get('templateName'));
+            cmt_map.put('Template_Id__c', parsedData.get('templateId'));
+
+            String cmtName = String.valueOf(parsedData.get('cmtName'));
+
+            String recordName = 'PDFTron_Template_Mapping.' + cmtName;
+
+            system.debug('### rec name: '+recordName);
+
+            PDFTron_CMT_Helper.createUpdateMetadata(recordName, recordName, cmt_map);
+            return 'Done!';
+        } catch(Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+  }
+
+  @AuraEnabled(Cacheable=true) 
+    public static List<sobject> queryValuesFromRecord(String recordId, String objectName, List<String> fields) {
+        Map<String, String> fieldMap = new Map<String, String> ();
+        String recId = recordId;
+        String query = 'SELECT ';
+        for(String field : fields) {
+            query += field + ', ';
+        }
+
+        query = query.substring(0, query.length() - 2);
+        query += ' ';
+        query += 'FROM ' + objectName + ' ';
+        query += 'WHERE Id = :recId';
+
+        List<sobject> sobjlist = Database.query(query);
+
+        System.debug(sobjlist);
+        return sobjlist;
+    }
+    @AuraEnabled(cacheable=true)
+    public static List<String> getSObjects(){
+        try {
+            List<string> sObjectList = new List<string>();
+
+            for(Schema.SObjectType objTyp : Schema.getGlobalDescribe().Values()) {
+            String name = objTyp.getDescribe().getName();
+            // Exclude all the unwanted Sobjects e.g. History, Share etc..
+                if((!name.containsignorecase('history') && !name.containsignorecase('tag')&&
+                    !name.containsignorecase('share') && !name.containsignorecase('feed')) || 
+                    name.toLowerCase().right(3) ==  '__c') {      
+                        sObjectList.add(name);
+                }
+            }
+
+            sObjectList.sort();
+            return sObjectList;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+    @AuraEnabled(Cacheable=true)
+    public static List<String> getObjectFields(String objectName){
+        try {
+            SObjectType objectType = Schema.getGlobalDescribe().get(objectName);
+            List<String> result = new List<String>();
+            for(Schema.SObjectField field : objectType.getDescribe().fields.getMap().values()) {
+                result.add(field + '');
+            } 
+            result.sort();
+            return result;
+        } catch (Exception e) {
+            throw new AuraHandledException(e.getMessage());
+        }
+    }
+
+  @AuraEnabled(Cacheable=true)
+    public static List<LookupSearchResult> searchSOSL(String searchTerm, List<String> selectedIds) {
+        // Prepare query paramters
+        searchTerm += '*';
+
+        // Execute search query
+        List<List<SObject>> searchResults = [
+            FIND :searchTerm
+            IN ALL FIELDS
+            RETURNING
+                Account(Id, Name, BillingCity WHERE id NOT IN :selectedIds),
+                Opportunity(Id, Name, StageName WHERE id NOT IN :selectedIds),
+                Contact(Id, FirstName, LastName WHERE id NOT IN :selectedIds)
+            LIMIT :MAX_RESULTS
+        ];
+
+        // Prepare results
+        List<LookupSearchResult> results = new List<LookupSearchResult>();
+
+        // Extract Accounts & convert them into LookupSearchResult
+        String accountIcon = 'standard:account';
+        Account[] accounts = (List<Account>) searchResults[0];
+        for (Account account : accounts) {
+            String subtitle = account.BillingCity == null ? 'Account' : 'Account • ' + account.BillingCity;
+            results.add(new LookupSearchResult(account.Id, 'Account', accountIcon, account.Name, subtitle));
+        }
+
+        // Extract Opportunities & convert them into LookupSearchResult
+        String opptyIcon = 'standard:opportunity';
+        Opportunity[] opptys = (List<Opportunity>) searchResults[1];
+        for (Opportunity oppty : opptys) {
+            results.add(
+                new LookupSearchResult(
+                    oppty.Id,
+                    'Opportunity',
+                    opptyIcon,
+                    oppty.Name,
+                    'Opportunity • ' + oppty.StageName
+                )
+            );
+        }
+
+        // Extract Opportunities & convert them into LookupSearchResult
+        String contactIcon = 'standard:contact';
+        Contact[] contacts = (List<Contact>) searchResults[2];
+        for (Contact con : contacts) {
+            results.add(
+                new LookupSearchResult(
+                    con.Id,
+                    'Contact',
+                    contactIcon,
+                    con.FirstName + ' ' + con.LastName,
+                    'Contact'
+                )
+            );
+        }
+
+        // Optionnaly sort all results on title
+        results.sort();
+
+        return results;
+    }
 
   public static String getFileLogo(String extension) {
     String logo = 'doctype:unknown';
