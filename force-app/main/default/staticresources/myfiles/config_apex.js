@@ -50,24 +50,6 @@ const redactionSearchSamples = [
   },
 ];
 
-window.addEventListener('viewerLoaded', async function () {
-  window.addEventListener('documentLoaded', async () => {
-    const { documentViewer } = instance.Core;
-    console.log('document loaded!');
-
-    instance.UI.setLayoutMode(instance.UI.LayoutMode.FacingContinuous)
-
-    await documentViewer.getDocument().documentCompletePromise();
-    documentViewer.updateView();
-
-    const doc = documentViewer.getDocument();
-    const keys = doc.getTemplateKeys();
-
-    console.log("keys", keys);
-
-    parent.postMessage({ type: 'DOC_KEYS', keys }, '*');
-  });
-});
 
 async function saveDocument() {
   const documentViewer = instance.Core.documentViewer;
@@ -196,6 +178,24 @@ window.addEventListener("viewerLoaded", async function () {
 
   instance.UI.disableElements(["header"]);
   addSaveButton();
+
+});
+
+window.addEventListener('documentLoaded', async () => {
+  const { documentViewer } = instance.Core;
+  console.log('document loaded!');
+
+  instance.UI.setLayoutMode(instance.UI.LayoutMode.FacingContinuous)
+
+  await documentViewer.getDocument().documentCompletePromise();
+  documentViewer.updateView();
+
+  const doc = documentViewer.getDocument();
+  const keys = await doc.getTemplateKeys();
+
+  console.log("keys", keys);
+
+  parent.postMessage({ type: 'DOC_KEYS', keys }, '*');
 });
 
 window.addEventListener("message", receiveMessage, false);
@@ -328,7 +328,6 @@ function receiveMessage(event) {
         instance.loadDocument(event.data.file);
         break;
       case "OPEN_DOCUMENT_BLOB":
-        console.log('hello');
         const { blob, extension, filename, documentId } = event.data.payload;
         currentDocId = documentId;
         instance.loadDocument(blob, { extension, filename, documentId });

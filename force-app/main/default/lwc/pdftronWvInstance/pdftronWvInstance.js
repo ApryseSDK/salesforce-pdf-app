@@ -283,7 +283,7 @@ export default class PdftronWvInstance extends LightningElement {
           });
           break;
         case "DOC_KEYS":
-          let keys = event.data.keys;
+          let keys = JSON.parse(JSON.stringify(event.data.keys));
           console.log("keys", keys);
 
           console.log("firing doc_gen_options");

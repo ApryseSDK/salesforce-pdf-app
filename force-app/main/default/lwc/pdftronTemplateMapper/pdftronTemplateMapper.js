@@ -256,6 +256,8 @@ export default class PdftronTemplateMapper extends LightningElement {
   }
 
   handleOptions (keys) {
+    console.log('is it working');
+    console.log(keys);
     this.rows = []
     for (const i in keys) {
       this.rows = [

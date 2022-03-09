@@ -109,6 +109,12 @@ export default class PdftronAttachmentPickerCombobox extends LightningElement {
 
     this.isLoading = true;
 
+    const selection = this.template.querySelector('c-lookup').getSelection()
+
+    this.dispatchEvent(new CustomEvent('selected', {
+        detail: selection[0] 
+      }));
+
     getFileDataFromId({ Id: event.detail[0] })
       .then((result) => {
         fireEvent(this.pageRef, "blobSelected", result);
