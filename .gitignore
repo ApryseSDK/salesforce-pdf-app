@@ -20,3 +20,5 @@ force-app/main/default/staticresources/external
 .sfdx/
 .vscode/
 node_modules
+.sfdx/typings/lwc/lds.d.ts
+.sfdx/indexes/lwc/custom-components.json
