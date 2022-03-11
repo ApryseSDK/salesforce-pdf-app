@@ -74,7 +74,7 @@ export default class PdftronContentReplacer extends NavigationMixin(
   }
 
   handleSelected(event){
-    this.docTemplate = JSON.parse(JSON.stringify(this.event.detail));
+    this.docTemplate = JSON.parse(JSON.stringify(event.detail));
   }
   //search by enter key
   handleKeyUp(evt) {
