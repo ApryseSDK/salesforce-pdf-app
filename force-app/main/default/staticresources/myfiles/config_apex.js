@@ -485,14 +485,14 @@ const pdfToImage = async (payload, transport) => {
     let itr;
     let currPage;
     let bufferFile;
-
+    let page = (count > 1) ? '(pg_' : ''
     // Handle multiple pages
     for (let i = 1; i <= count; i++){
-
+      let pageNum = page ? (page + i + ')') : ''
       itr = await doc.getPageIterator(i);
       currPage = await itr.current();
       bufferFile = await pdfdraw.exportStream(currPage, payload.exportType.toUpperCase());
-      transport ? exportFile(bufferFile, payload.file, "." + payload.exportType) : downloadFile(bufferFile, payload.file, "." + payload.exportType);
+      transport ? exportFile(bufferFile, payload.file + pageNum, "." + payload.exportType) : downloadFile(bufferFile, payload.file + pageNum, "." + payload.exportType);
 
     }
 
