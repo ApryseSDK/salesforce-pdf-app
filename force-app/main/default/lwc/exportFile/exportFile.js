@@ -13,7 +13,7 @@ export default class ExportFile extends LightningElement {
 
     payload;
 
-    
+    hasSpinner = false;
     
     pdf_options = [
         { label: 'JPG', value: 'jpg' },
@@ -27,6 +27,7 @@ export default class ExportFile extends LightningElement {
     connectedCallback() {
         registerListener('blobSelected', this.handleBlobSelected, this);
         registerListener('clearSelected', this.handleClearSelected, this);
+        registerListener('finishConvert', this.handleFinishConvert, this);
     }
 
     handleClearSelected(){
@@ -53,6 +54,7 @@ export default class ExportFile extends LightningElement {
 
     handleExport(){
         if(this.value){
+            this.hasSpinner = true;
             this.payload.transport = 'EXPORT_DOCUMENT';
             fireEvent(this.pageRef, 'transportDocument', this.payload);
         }
@@ -60,6 +62,7 @@ export default class ExportFile extends LightningElement {
 
     handleDownload(){
         if(this.value){
+            this.hasSpinner = true;
             this.payload.transport = 'DOWNLOAD_DOCUMENT';
             fireEvent(this.pageRef, 'transportDocument', this.payload);
         }
@@ -73,5 +76,9 @@ export default class ExportFile extends LightningElement {
             value: event.detail.value
         }
         
+    }
+
+    handleFinishConvert(){
+        this.hasSpinner = false;
     }
 }

@@ -1,16 +1,19 @@
 public with sharing class PDFTron_ContentVersionController {
   static Set<String> supportedFileFormats = new Set<String>{
-    'pdf',
+    'pdf', 
     'xfdf',
     'fdf',
     'doc',
-    'docx',
+    'docx', 
     'xlsx',
     'ppt',
     'pptx',
     'jpg',
     'jpeg',
     'png',
+    'mov',
+    'tif',
+    'tiff',
     'xls',
     'xlsx'
   };
