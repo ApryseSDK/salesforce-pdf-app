@@ -412,12 +412,23 @@ function receiveMessage(event) {
       case 'DOWNLOAD_DOCUMENT':
         transportDocument(event.data.payload, false)
         break;
+      case 'FILL_TEMPLATE':
+        fillDocument(event);
+        break;
       default:
         break;
     }
   }
 }
 
+async function fillDocument(event) {
+  const autofillMap = event.data.mapping;
+
+  console.log('autofillMap', autofillMap);
+
+  await documentViewer.getDocument().applyTemplateValues(autofillMap);
+
+}
 let currentDocId;
 
 function transportDocument(payload, transport){

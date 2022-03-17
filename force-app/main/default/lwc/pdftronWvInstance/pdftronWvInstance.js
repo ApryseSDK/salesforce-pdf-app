@@ -13,7 +13,7 @@ import {
 import WebViewerMC from "@salesforce/messageChannel/WebViewerMessageChannel__c";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import mimeTypes from "./mimeTypes";
-import { registerListener, unregisterAllListeners } from "c/pubsub";
+import { fireEvent, registerListener, unregisterAllListeners } from "c/pubsub";
 import saveDocument from "@salesforce/apex/PDFTron_ContentVersionController.saveDocument";
 import getUser from "@salesforce/apex/PDFTron_ContentVersionController.getUser";
 import getUsers from "@salesforce/apex/PDFTron_ContentVersionController.getUsers";
@@ -66,6 +66,7 @@ export default class PdftronWvInstance extends LightningElement {
     registerListener("redactDTM", this.contentRedactDTM, this);
     registerListener("redactEmail", this.contentRedactEmail, this);
     registerListener('clearSelected', this.handleClearSelected, this);
+    registerListener('doc_gen_mapping', this.handleTemplateMapping, this);
     window.addEventListener('unload', this.unloadHandler,this);
     window.addEventListener("message", this.handleReceiveMessage);
   }
@@ -196,6 +197,12 @@ export default class PdftronWvInstance extends LightningElement {
         this.showNotification("Error", error.body.message, "error");
       });
   }
+
+  handleTemplateMapping(mapping) {
+    console.log('mapping in instance: ', mapping);
+    this.iframeWindow.postMessage({ type: 'FILL_TEMPLATE', mapping }, '*');
+  }
+
 
   initUI() {
     var myObj = {
