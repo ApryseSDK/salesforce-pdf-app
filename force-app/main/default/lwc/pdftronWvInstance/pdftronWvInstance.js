@@ -82,9 +82,6 @@ export default class PdftronWvInstance extends LightningElement {
       return;
     }
     this.channel = subscribe(this.context, WebViewerMC, (message) => {
-      if (message) {
-        console.log(message);
-      }
     });
   }
 
@@ -175,7 +172,6 @@ export default class PdftronWvInstance extends LightningElement {
   handleMentions() {
     getUsers()
       .then((result) => {
-        console.log(result);
         result.forEach((user) => {
           let current = {
             value: user.FirstName + " " + user.LastName,

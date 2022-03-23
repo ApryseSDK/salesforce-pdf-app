@@ -23,7 +23,6 @@ export default class PdftronWebviewerContainer extends LightningElement {
         }
         this.channel = subscribe(this.context, WebViewerMC, (message) => {
             if (message) {
-                console.log('Container received: ' + message);
                 if(message.messageBody === 'Video') {
                     this.renderVideo = true;
                 } else {

@@ -212,7 +212,6 @@ function receiveMessage(event) {
       return annotation;
     });
 
-    console.log(newAnnotations);
 
     annotManager.addAnnotations(newAnnotations);
     annotManager.drawAnnotationsFromList(newAnnotations);
@@ -450,7 +449,6 @@ async function toPdf (payload, transport) {
       const buffer = await doc.getFileData({ downloadType: payload.exportType });
       const bufferFile = new Uint8Array(buffer);
 
-      console.log(payload);
 
       exportFile(bufferFile, payload.file, "." + payload.exportType);
 
@@ -537,7 +535,6 @@ function exportFile (buffer, fileName, fileExtension) {
     base64Data,
     contentDocumentId: currentDocId
   }
-  console.log(payload);
   // Post message to LWC
   fileSize < docLimit ? parent.postMessage({ type: 'SAVE_CONVERT_DOCUMENT', payload }, '*') : downloadFile(buffer, fileName, "." + fileExtension);
 }

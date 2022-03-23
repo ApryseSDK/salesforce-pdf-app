@@ -8,14 +8,12 @@ export default class PdftronSideBar extends LightningElement {
     context;
 
     handleToggleSection(event) {
-        console.log(`Open section: ${event.detail.openSections}`);
         this.currentSection = event.detail.openSections;
         let payload = {
             source: "pdftronSideBar",
             messageBody: this.currentSection
         }
 
-        console.log(payload);
 
         publish(this.context, WebViewerMC, payload);
     }
