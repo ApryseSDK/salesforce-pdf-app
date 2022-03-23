@@ -16,8 +16,8 @@ export default class ExportFile extends LightningElement {
     hasSpinner = false;
     
     pdf_options = [
-        { label: 'JPG', value: 'jpg' },
-        { label: 'PNG', value: 'png' }
+        { label: 'JPG (Single Pages)', value: 'jpg' },
+        { label: 'PNG (Single Pages)', value: 'png' }
     ]
 
     other_options = [
