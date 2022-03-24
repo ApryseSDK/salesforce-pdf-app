@@ -31,8 +31,6 @@
             const message = event.getParam('message');
             const source = event.getParam('source');
             
-            //do stuff
-            console.log(`Your message is: ${message} - received from ${source}`);
         }
     }
 })

@@ -3,6 +3,7 @@ import { publish, createMessageContext, releaseMessageContext, subscribe, unsubs
 import WebViewerMC from "@salesforce/messageChannel/WebViewerMessageChannel__c";
 
 export default class PdftronWebviewerContainer extends LightningElement {
+    @api flexipageRegionWidth;
     @api recordId;
     @track renderVideo = false;
     channel;
@@ -22,7 +23,6 @@ export default class PdftronWebviewerContainer extends LightningElement {
         }
         this.channel = subscribe(this.context, WebViewerMC, (message) => {
             if (message) {
-                console.log('Container received: ' + message);
                 if(message.messageBody === 'Video') {
                     this.renderVideo = true;
                 } else {

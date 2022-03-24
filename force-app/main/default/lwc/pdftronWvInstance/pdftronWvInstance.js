@@ -13,10 +13,10 @@ import {
 import WebViewerMC from "@salesforce/messageChannel/WebViewerMessageChannel__c";
 import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import mimeTypes from "./mimeTypes";
-import { registerListener, unregisterAllListeners } from "c/pubsub";
+import { fireEvent, registerListener, unregisterAllListeners } from "c/pubsub";
 import saveDocument from "@salesforce/apex/PDFTron_ContentVersionController.saveDocument";
+import saveConvertDocument from "@salesforce/apex/PDFTron_ContentVersionController.convertDocument";
 import getUser from "@salesforce/apex/PDFTron_ContentVersionController.getUser";
-getUsers;
 import getUsers from "@salesforce/apex/PDFTron_ContentVersionController.getUsers";
 
 function _base64ToArrayBuffer(base64) {
@@ -39,6 +39,7 @@ export default class PdftronWvInstance extends LightningElement {
   source = "My file";
   fullAPI = true;
   enableRedaction = true;
+  payload;
   @api recordId;
 
   username;
@@ -56,6 +57,7 @@ export default class PdftronWvInstance extends LightningElement {
     ///servlet/servlet.FileDownload?file=documentId0694x000000pEGyAAM
     this.handleSubscribe();
     registerListener("blobSelected", this.handleBlobSelected, this);
+    registerListener('transportDocument', this.transportDocument, this);
     registerListener("search", this.search, this);
     registerListener("ribbon", this.handleRibbon, this);
     registerListener("video", this.loadVideo, this);
@@ -64,17 +66,14 @@ export default class PdftronWvInstance extends LightningElement {
     registerListener("redactPhone", this.contentRedactPhone, this);
     registerListener("redactDTM", this.contentRedactDTM, this);
     registerListener("redactEmail", this.contentRedactEmail, this);
+    registerListener('clearSelected', this.handleClearSelected, this);
     window.addEventListener('unload', this.unloadHandler,this);
-    window.addEventListener(
-      "message",
-      this.handleReceiveMessage.bind(this),
-      false
-    );
+    window.addEventListener("message", this.handleReceiveMessage);
   }
 
   disconnectedCallback() {
     unregisterAllListeners(this);
-    window.removeEventListener("message", this.handleReceiveMessage, true);
+    window.removeEventListener("message", this.handleReceiveMessage);
     this.handleUnsubscribe();
   }
 
@@ -83,9 +82,6 @@ export default class PdftronWvInstance extends LightningElement {
       return;
     }
     this.channel = subscribe(this.context, WebViewerMC, (message) => {
-      if (message) {
-        console.log(message);
-      }
     });
   }
 
@@ -141,10 +137,21 @@ export default class PdftronWvInstance extends LightningElement {
     const payload = {
       blob: blobby,
       extension: record.cv.FileExtension,
+      file: record.cv.Title,
       filename: record.cv.Title + "." + record.cv.FileExtension,
       documentId: record.cv.Id,
     };
-    this.iframeWindow.postMessage({ type: "OPEN_DOCUMENT_BLOB", payload }, "*");
+
+    this.payload = {...payload};
+
+    switch (payload.extension){
+      case 'tiff':
+        this.iframeWindow.postMessage({ type: 'OPEN_TIFF_BLOB', payload }, '*');
+        break;
+      default:
+        this.iframeWindow.postMessage({ type: 'OPEN_DOCUMENT_BLOB', payload }, '*');
+        break;
+    }
   }
 
   renderedCallback() {
@@ -165,7 +172,6 @@ export default class PdftronWvInstance extends LightningElement {
   handleMentions() {
     getUsers()
       .then((result) => {
-        console.log(result);
         result.forEach((user) => {
           let current = {
             value: user.FirstName + " " + user.LastName,
@@ -219,6 +225,7 @@ export default class PdftronWvInstance extends LightningElement {
         enableRedaction: this.enableRedaction,
         enableMeasurement: this.enableMeasurement,
         // l: 'YOUR_LICENSE_KEY_HERE',
+        
       },
       viewerElement
     );
@@ -228,7 +235,33 @@ export default class PdftronWvInstance extends LightningElement {
     });
   }
 
-  handleReceiveMessage(event) {
+  transportDocument(convert) {
+    if(this.payload != null){
+
+      const payload = {...this.payload};
+      payload.exportType = convert.value;
+      payload.transport = convert.transport;
+      this.iframeWindow.postMessage({type: convert.transport, payload }, '*');
+
+    } else {
+      console.log('No file selected');
+    }
+  }
+
+  handleClearSelected() {
+    this.iframeWindow.postMessage({type: 'CLOSE_DOCUMENT' }, '*')
+  }
+
+  showNotification (title, message, variant) {
+    const evt = new ShowToastEvent({
+      title: title,
+      message: message,
+      variant: variant
+    })
+    this.dispatchEvent(evt)
+  }
+
+  handleReceiveMessage = (event) => {
     const me = this;
     if (event.isTrusted && typeof event.data === "object") {
       switch (event.data.type) {
@@ -246,6 +279,29 @@ export default class PdftronWvInstance extends LightningElement {
             .catch((error) => {
               console.error(JSON.stringify(error));
             });
+          break;
+        case "SAVE_CONVERT_DOCUMENT":
+          const cvId = event.data.payload.contentDocumentId;
+          saveConvertDocument({ json: JSON.stringify(event.data.payload), recordId: this.recordId ? this.recordId : '', cvId: cvId })
+          .then((response) => {
+            me.iframeWindow.postMessage({ type: 'DOCUMENT_SAVED', response }, '*');
+            fireEvent(this.pageRef, 'finishConvert', '');
+            fireEvent(this.pageRef, 'refreshOnSave', response);
+            this.showNotification('Success', event.data.payload.filename + ' Saved', 'success');
+          })
+          .catch(error => {
+            me.iframeWindow.postMessage({ type: 'DOCUMENT_SAVED', error }, '*');
+            fireEvent(this.pageRef, 'refreshOnSave', error);
+            console.error(event.data.payload.contentDocumentId);
+            console.error(JSON.stringify(error));
+            this.showNotification('Error', error.body, 'error');
+          });
+          break;
+        case 'DOWNLOAD_CONVERT_DOCUMENT':
+          me.iframeWindow.postMessage({ type: 'DOCUMENT_DOWNLOADED' }, '*');
+          const body = event.data.file + ' Downloaded';
+          fireEvent(this.pageRef, 'finishConvert', '');
+          this.showNotification('Success', body, 'success');
           break;
         default:
           break;

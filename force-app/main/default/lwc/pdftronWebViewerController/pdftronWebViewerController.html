@@ -19,9 +19,12 @@
           id="attachmentCombobox"
           class="slds-col slds-p-left_x-small slds-p-right_x-small slds-p-top_x-small slds-size_4-of-4"
         >
+
           <c-pdftron-attachment-picker-combobox
             record-id={recordId}
           ></c-pdftron-attachment-picker-combobox>
+          <c-export-file if:true={renderConvert} class="slds-col"></c-export-file>
+
         </div>
       </template>
     </div>
