@@ -18,6 +18,7 @@ import saveDocument from "@salesforce/apex/PDFTron_ContentVersionController.save
 import saveConvertDocument from "@salesforce/apex/PDFTron_ContentVersionController.convertDocument";
 import getUser from "@salesforce/apex/PDFTron_ContentVersionController.getUser";
 import getUsers from "@salesforce/apex/PDFTron_ContentVersionController.getUsers";
+import getCustomPermission from "@salesforce/apex/PDFTron_ContentVersionController.getCustomPermission";
 
 function _base64ToArrayBuffer(base64) {
   var binary_string = window.atob(base64);
@@ -44,6 +45,7 @@ export default class PdftronWvInstance extends LightningElement {
 
   username;
   users = [];
+  hasPermission;
 
   @wire(CurrentPageReference)
   pageRef;
@@ -164,9 +166,21 @@ export default class PdftronWvInstance extends LightningElement {
     Promise.all([
       loadScript(self, libUrl + "/webviewer.min.js")
     ])
+      .then(() => this.handleCustomPermission())
       .then(() => this.handleMentions())
       .then(() => this.handleInitWithCurrentUser())
       .catch(console.error);
+  }
+
+  handleCustomPermission() {
+    getCustomPermission({ permission: 'YOUR_CUSTOM_PERMISSION'})
+    .then((result) => {
+      this.hasPermission = result;
+    })
+    .catch((error) => {
+      console.error(error);
+      this.showNotification("Error", error.body.message, "error");
+    });
   }
 
   handleMentions() {
@@ -208,6 +222,7 @@ export default class PdftronWvInstance extends LightningElement {
       namespacePrefix: "",
       username: this.username,
       userlist: JSON.stringify(this.users),
+      hasPermission: this.hasPermission
     };
     var url = myfilesUrl + "/webviewer-demo-annotated.pdf";
 
