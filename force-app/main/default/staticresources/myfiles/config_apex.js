@@ -166,6 +166,11 @@ async function replaceContent(searchString, replacementString) {
 }
 
 window.addEventListener("viewerLoaded", async function () {
+  if(custom.hasPermission) {
+   //setup for users with permission 
+  } else {
+   //setup for user without permission 
+  }
   //set current user, set up mentions for sample users
   instance.Core.documentViewer
     .getAnnotationManager()
