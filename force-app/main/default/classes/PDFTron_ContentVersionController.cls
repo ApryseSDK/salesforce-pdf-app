@@ -47,6 +47,11 @@ public with sharing class PDFTron_ContentVersionController {
       throw new AuraHandledException(e.getMessage());
     }
   }
+  
+  @AuraEnabled
+  public static Boolean getCustomPermission(String permission) {
+    return FeatureManagement.checkPermission(permission);
+  }
 
   @AuraEnabled
   public static ContentVersionWrapper getBase64FromCv(String recordId) {
