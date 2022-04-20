@@ -15,8 +15,10 @@ import { ShowToastEvent } from "lightning/platformShowToastEvent";
 import mimeTypes from "./mimeTypes";
 import { fireEvent, registerListener, unregisterAllListeners } from "c/pubsub";
 import saveDocument from "@salesforce/apex/PDFTron_ContentVersionController.saveDocument";
+import saveConvertDocument from "@salesforce/apex/PDFTron_ContentVersionController.convertDocument";
 import getUser from "@salesforce/apex/PDFTron_ContentVersionController.getUser";
 import getUsers from "@salesforce/apex/PDFTron_ContentVersionController.getUsers";
+import getCustomPermission from "@salesforce/apex/PDFTron_ContentVersionController.getCustomPermission";
 
 function _base64ToArrayBuffer(base64) {
   var binary_string = window.atob(base64);
@@ -43,6 +45,7 @@ export default class PdftronWvInstance extends LightningElement {
 
   username;
   users = [];
+  hasPermission;
 
   @wire(CurrentPageReference)
   pageRef;
@@ -82,9 +85,6 @@ export default class PdftronWvInstance extends LightningElement {
       return;
     }
     this.channel = subscribe(this.context, WebViewerMC, (message) => {
-      if (message) {
-        console.log(message);
-      }
     });
   }
 
@@ -147,7 +147,14 @@ export default class PdftronWvInstance extends LightningElement {
 
     this.payload = {...payload};
 
-    this.iframeWindow.postMessage({ type: "OPEN_DOCUMENT_BLOB", payload }, "*");
+    switch (payload.extension){
+      case 'tiff':
+        this.iframeWindow.postMessage({ type: 'OPEN_TIFF_BLOB', payload }, '*');
+        break;
+      default:
+        this.iframeWindow.postMessage({ type: 'OPEN_DOCUMENT_BLOB', payload }, '*');
+        break;
+    }
   }
 
   renderedCallback() {
@@ -160,15 +167,26 @@ export default class PdftronWvInstance extends LightningElement {
     Promise.all([
       loadScript(self, libUrl + "/webviewer.min.js")
     ])
+      .then(() => this.handleCustomPermission())
       .then(() => this.handleMentions())
       .then(() => this.handleInitWithCurrentUser())
       .catch(console.error);
   }
 
+  handleCustomPermission() {
+    getCustomPermission({ permission: 'YOUR_CUSTOM_PERMISSION'})
+    .then((result) => {
+      this.hasPermission = result;
+    })
+    .catch((error) => {
+      console.error(error);
+      this.showNotification("Error", error.body.message, "error");
+    });
+  }
+
   handleMentions() {
     getUsers()
       .then((result) => {
-        console.log(result);
         result.forEach((user) => {
           let current = {
             value: user.FirstName + " " + user.LastName,
@@ -211,6 +229,7 @@ export default class PdftronWvInstance extends LightningElement {
       namespacePrefix: "",
       username: this.username,
       userlist: JSON.stringify(this.users),
+      hasPermission: this.hasPermission
     };
     var url = myfilesUrl + "/webviewer-demo-annotated.pdf";
 
@@ -255,6 +274,15 @@ export default class PdftronWvInstance extends LightningElement {
     this.iframeWindow.postMessage({type: 'CLOSE_DOCUMENT' }, '*')
   }
 
+  showNotification (title, message, variant) {
+    const evt = new ShowToastEvent({
+      title: title,
+      message: message,
+      variant: variant
+    })
+    this.dispatchEvent(evt)
+  }
+
   handleReceiveMessage = (event) => {
     const me = this;
     if (event.isTrusted && typeof event.data === "object") {
@@ -274,15 +302,17 @@ export default class PdftronWvInstance extends LightningElement {
               console.error(JSON.stringify(error));
             });
           break;
-        case "CONVERT_DOCUMENT":
+        case "SAVE_CONVERT_DOCUMENT":
           const cvId = event.data.payload.contentDocumentId;
-          saveDocument({ json: JSON.stringify(event.data.payload), recordId: this.recordId ? this.recordId : '', cvId: cvId })
+          saveConvertDocument({ json: JSON.stringify(event.data.payload), recordId: this.recordId ? this.recordId : '', cvId: cvId })
           .then((response) => {
-            me.iframeWindow.postMessage({ type: 'DOCUMENT_SAVED', response }, '*')
+            me.iframeWindow.postMessage({ type: 'DOCUMENT_SAVED', response }, '*');
+            fireEvent(this.pageRef, 'finishConvert', '');
             fireEvent(this.pageRef, 'refreshOnSave', response);
+            this.showNotification('Success', event.data.payload.filename + ' Saved', 'success');
           })
           .catch(error => {
-            me.iframeWindow.postMessage({ type: 'DOCUMENT_SAVED', error }, '*')
+            me.iframeWindow.postMessage({ type: 'DOCUMENT_SAVED', error }, '*');
             fireEvent(this.pageRef, 'refreshOnSave', error);
             console.error(event.data.payload.contentDocumentId);
             console.error(JSON.stringify(error));
@@ -295,6 +325,11 @@ export default class PdftronWvInstance extends LightningElement {
 
           console.log("firing doc_gen_options");
           fireEvent(this.pageRef, 'doc_gen_options', keys);
+        case 'DOWNLOAD_CONVERT_DOCUMENT':
+          me.iframeWindow.postMessage({ type: 'DOCUMENT_DOWNLOADED' }, '*');
+          const body = event.data.file + ' Downloaded';
+          fireEvent(this.pageRef, 'finishConvert', '');
+          this.showNotification('Success', body, 'success');\
           break;
         default:
           break;

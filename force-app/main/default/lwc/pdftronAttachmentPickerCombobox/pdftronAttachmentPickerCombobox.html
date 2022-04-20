@@ -71,15 +71,18 @@
               <lightning-card title="Upload Attachments">
                 <!-- File Picker -->
                 <div class="slds-align_absolute-center">
-                  <lightning-file-upload
-                    class="slds-p-top_xxx-small"
-                    label="Attach document"
-                    name="fileUploader"
-                    accept={acceptedFormats}
-                    record-id={recordId}
-                    onuploadfinished={handleUploadFinished}
-                    multiple
-                  ></lightning-file-upload>
+
+                    <template if:true={hasRecord}>
+                      <lightning-file-upload class="slds-p-top_xxx-small" label="Attach document"
+                      name="fileUploader" accept={acceptedFormats} record-id={recordId}
+                      onuploadfinished={handleUploadFinished} multiple></lightning-file-upload>
+                  </template>
+
+                  <template if:false={hasRecord}>
+                      <lightning-file-upload class="slds-p-top_xxx-small" label="Attach document"
+                      name="fileUploader" accept={acceptedFormats}
+                      onuploadfinished={handleUploadFinished} multiple></lightning-file-upload>
+                  </template>
                 </div>
               </lightning-card>
             </div>

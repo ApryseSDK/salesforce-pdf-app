@@ -22,6 +22,11 @@ export default class PdftronContentReplacer extends NavigationMixin(
   fileName;
   file;
 
+
+  // Testing Linear
+
+
+
   //LMS
   @track receivedMessage = "";
   channel;
@@ -130,7 +135,6 @@ export default class PdftronContentReplacer extends NavigationMixin(
   }
 
   handleContentReplace() {
-    console.log(this.replaceTerm);
 
     //validate
     this.template.querySelectorAll("lightning-input").forEach((element) => {
@@ -162,7 +166,6 @@ export default class PdftronContentReplacer extends NavigationMixin(
     }
     this.channel = subscribe(this.context, WebViewerMC, (message) => {
       if (message) {
-        console.log(message);
         this.title = message.messageBody;
         fireEvent(this.pageRef, "ribbon", this.title);
 
@@ -323,7 +326,6 @@ export default class PdftronContentReplacer extends NavigationMixin(
   }
 
   handleVideoURL(event) {
-    console.log(`New vid URL: ${event.detail.value}`);
     this.videoURL = event.detail.value;
     fireEvent(this.pageRef, "video", this.videoURL);
   }

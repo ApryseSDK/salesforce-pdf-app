@@ -167,6 +167,11 @@ async function replaceContent(searchString, replacementString) {
 }
 
 window.addEventListener("viewerLoaded", async function () {
+  if(custom.hasPermission) {
+   //setup for users with permission 
+  } else {
+   //setup for user without permission 
+  }
   //set current user, set up mentions for sample users
   instance.Core.documentViewer
     .getAnnotationManager()
@@ -200,6 +205,23 @@ window.addEventListener('documentLoaded', async () => {
 
 window.addEventListener("message", receiveMessage, false);
 
+async function loadTIFF(payload){
+  var blob = payload.blob;
+  
+  await PDFNet.runWithoutCleanup(async () => {
+    var newDoc = await PDFNet.PDFDoc.create();
+    newDoc.initSecurityHandler();
+    newDoc.lock();
+
+    let bufferTiff = await blob.arrayBuffer();
+    const tiffFile = await PDFNet.Filter.createFromMemory(bufferTiff);
+    await PDFNet.Convert.fromTiff(newDoc, tiffFile);
+    const buffer = await newDoc.saveMemoryBuffer(PDFNet.SDFDoc.SaveOptions.e_linearized);
+    newDoc.unlock();
+    instance.loadDocument(newDoc);
+  });
+}
+
 function receiveMessage(event) {
   //search callback
   const annotManager = instance.Core.documentViewer.getAnnotationManager();
@@ -214,7 +236,6 @@ function receiveMessage(event) {
       return annotation;
     });
 
-    console.log(newAnnotations);
 
     annotManager.addAnnotations(newAnnotations);
     annotManager.drawAnnotationsFromList(newAnnotations);
@@ -338,6 +359,12 @@ function receiveMessage(event) {
           instance.closeElements(["errorModal", "loadingModal"]);
         }, 2500);
         break;
+      case "DOCUMENT_DOWNLOADED":
+        instance.showErrorMessage("Document downloaded!");
+        setTimeout(() => {
+          instance.closeElements(["errorModal", "loadingModal"]);
+        }, 2500);
+        break;
       case "SEARCH_DOCUMENT":
         if (event.data.term) {
           instance.showErrorMessage(`Searching for ${event.data.term}`);
@@ -414,6 +441,8 @@ function receiveMessage(event) {
         break;
       case 'FILL_TEMPLATE':
         fillDocument(event);
+      case 'OPEN_TIFF_BLOB':
+        loadTIFF(event.data.payload);
         break;
       default:
         break;
@@ -454,11 +483,14 @@ async function toPdf (payload, transport) {
       const buffer = await doc.getFileData({ downloadType: payload.exportType });
       const bufferFile = new Uint8Array(buffer);
 
-      console.log(payload);
 
       exportFile(bufferFile, payload.file, "." + payload.exportType);
 
   } else {
+
+    let file = payload.file;
+
+    parent.postMessage({ type: 'DOWNLOAD_CONVERT_DOCUMENT', file }, '*');
 
     instance.downloadPdf({filename: payload.file});
 
@@ -485,14 +517,14 @@ const pdfToImage = async (payload, transport) => {
     let itr;
     let currPage;
     let bufferFile;
-
+    let page = (count > 1) ? '(pg_' : ''
     // Handle multiple pages
     for (let i = 1; i <= count; i++){
-
+      let pageNum = page ? (page + i + ')') : ''
       itr = await doc.getPageIterator(i);
       currPage = await itr.current();
       bufferFile = await pdfdraw.exportStream(currPage, payload.exportType.toUpperCase());
-      transport ? exportFile(bufferFile, payload.file, "." + payload.exportType) : downloadFile(bufferFile, payload.file, "." + payload.exportType);
+      transport ? exportFile(bufferFile, payload.file + pageNum, "." + payload.exportType) : downloadFile(bufferFile, payload.file + pageNum, "." + payload.exportType);
 
     }
 
@@ -504,6 +536,8 @@ const pdfToImage = async (payload, transport) => {
 const downloadFile = (buffer, fileName, fileExtension) => {
   const blob = new Blob([buffer]);
   const link = document.createElement('a');
+
+  const file = fileName + fileExtension;
   // create a blobURI pointing to our Blob
   link.href = URL.createObjectURL(blob);
   link.download = fileName + fileExtension;
@@ -511,6 +545,8 @@ const downloadFile = (buffer, fileName, fileExtension) => {
   document.body.append(link);
   link.click();
   link.remove();
+
+  parent.postMessage({ type: 'DOWNLOAD_CONVERT_DOCUMENT', file }, '*') 
   // in case the Blob uses a lot of memory
   setTimeout(() => URL.revokeObjectURL(link.href), 7000);
 };
@@ -533,7 +569,6 @@ function exportFile (buffer, fileName, fileExtension) {
     base64Data,
     contentDocumentId: currentDocId
   }
-  console.log(payload);
   // Post message to LWC
-  fileSize < docLimit ? parent.postMessage({ type: 'SAVE_DOCUMENT', payload }, '*') : downloadFile(buffer, fileName, "." + fileExtension);
+  fileSize < docLimit ? parent.postMessage({ type: 'SAVE_CONVERT_DOCUMENT', payload }, '*') : downloadFile(buffer, fileName, "." + fileExtension);
 }

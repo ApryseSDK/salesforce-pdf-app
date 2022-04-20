@@ -2,17 +2,20 @@ public with sharing class PDFTron_ContentVersionController {
   private final static Integer MAX_RESULTS = 7;
   
   static Set<String> supportedFileFormats = new Set<String>{
-    'pdf',
+    'pdf', 
     'xfdf',
     'fdf',
     'doc',
-    'docx',
+    'docx', 
     'xlsx',
     'ppt',
     'pptx',
     'jpg',
     'jpeg',
     'png',
+    'mov',
+    'tif',
+    'tiff',
     'xls',
     'xlsx'
   };
@@ -45,6 +48,11 @@ public with sharing class PDFTron_ContentVersionController {
     } catch (Exception e) {
       throw new AuraHandledException(e.getMessage());
     }
+  }
+  
+  @AuraEnabled
+  public static Boolean getCustomPermission(String permission) {
+    return FeatureManagement.checkPermission(permission);
   }
 
   @AuraEnabled

@@ -21,7 +21,10 @@ export default class PdftronAttachmentPickerCombobox extends LightningElement {
   @track attachments = [];
   @wire(CurrentPageReference) pageRef;
 
+  hasRecord;
+
   renderedCallback() {
+    this.hasRecord = this.recordId ? true : false;
     if(!this.recordId) {
       this.loadFinished = true;
       return
@@ -79,7 +82,7 @@ export default class PdftronAttachmentPickerCombobox extends LightningElement {
   handleSearch(event) {
     const lookupElement = event.target;
     apexSearch(event.detail)
-      .then((results) => {
+      .then(results => {
         lookupElement.setSearchResults(results);
       })
       .catch((error) => {
@@ -182,48 +185,50 @@ export default class PdftronAttachmentPickerCombobox extends LightningElement {
   refreshOnSave () {
     this.loadFinished = false;
     this.attachments = []
-    getAttachments({ recordId: this.recordId })
-      .then(data => {
-        this.attachments = data
-        this.initLookupDefaultResults(data)
+    if(this.recordId){
+      getAttachments({ recordId: this.recordId })
+        .then(data => {
+          this.attachments = data
+          this.initLookupDefaultResults(data)
 
-        if(data[0]) {
-          const lookup = this.template.querySelector('c-lookup');
-          lookup.selection = data[0]
+          if(data[0]) {
+            const lookup = this.template.querySelector('c-lookup');
+            lookup.selection = data[0]
 
-          getFileDataFromId({ Id: data[0].id })
-          .then(result => {
-            fireEvent(this.pageRef, 'blobSelected', result)
-          })
-          .catch(error => {
-
-            // TODO: handle error
-            this.errors.push({
-              message: error.body.message
+            getFileDataFromId({ Id: data[0].id })
+            .then(result => {
+              fireEvent(this.pageRef, 'blobSelected', result)
             })
-            console.error(error)
+            .catch(error => {
 
-            let def_message =
-              'Oops, we hit a snag. '
+              // TODO: handle error
+              this.errors.push({
+                message: error.body.message
+              })
+              console.error(error)
 
-            this.showNotification(
-              def_message,
-              error.body.message,
-              'error'
-            )
-            //lookup.selection = undefined
-          })
-        }
+              let def_message =
+                'Oops, we hit a snag. '
 
-        this.loadFinished = true;
-        this.error = undefined
-        this.documentsRetrieved = true
-      })
-      .catch(error => {
-        console.error(error)
-        this.showNotification('Error', error, 'error')
-        this.error = error
-      })
+              this.showNotification(
+                def_message,
+                error.body.message,
+                'error'
+              )
+              //lookup.selection = undefined
+            })
+          }
+
+          this.loadFinished = true;
+          this.error = undefined
+          this.documentsRetrieved = true
+        })
+        .catch(error => {
+          console.error(error)
+          this.showNotification('Error', error, 'error')
+          this.error = error
+        })
+    }
   }
 
   handleDownload() {
