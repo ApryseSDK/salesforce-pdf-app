@@ -12,7 +12,8 @@ script.type = "text/javascript";
 // update '/1614618671000/' timestamp to work with your org
 // use relative path to your main.js file hosted in your static resources
 let timestamp = Date.now() + "";
-script.src = `/resource/1614618671000/myfiles/main.js`;
+script.src = `/resource/1653592972000/myfiles/main_video.js`;
+
 
 document.head.appendChild(script);
 
