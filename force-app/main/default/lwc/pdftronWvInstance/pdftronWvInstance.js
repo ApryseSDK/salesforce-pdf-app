@@ -329,7 +329,7 @@ export default class PdftronWvInstance extends LightningElement {
           me.iframeWindow.postMessage({ type: 'DOCUMENT_DOWNLOADED' }, '*');
           const body = event.data.file + ' Downloaded';
           fireEvent(this.pageRef, 'finishConvert', '');
-          this.showNotification('Success', body, 'success');\
+          this.showNotification('Success', body, 'success');
           break;
         default:
           break;
