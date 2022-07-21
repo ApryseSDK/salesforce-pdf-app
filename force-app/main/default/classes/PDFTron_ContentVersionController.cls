@@ -567,6 +567,27 @@ public with sharing class PDFTron_ContentVersionController {
     }
   }
 
+  @AuraEnabled
+    public static String getResourceURL(String resourceName){
+        System.debug(resourceName);
+        // Fetching the resource
+        List<StaticResource> resourceList= [SELECT Name, NamespacePrefix, SystemModStamp FROM StaticResource WHERE Name = :resourceName];
+        System.debug(resourceList);
+        // Checking if the result is returned or not
+        if(resourceList.size() == 1){
+
+           // Getting namespace
+           String namespace = resourceList[0].NamespacePrefix;
+           // Resource URL
+           System.debug(namespace);
+           System.debug('/resource/' + resourceList[0].SystemModStamp.getTime() + '/' + (namespace != null && namespace != '' ? namespace + '__' : '') + resourceName);
+
+           return '/resource/' + resourceList[0].SystemModStamp.getTime() + '/' + (namespace != null && namespace != '' ? namespace + '__' : '') + resourceName; 
+        }
+        
+        return '';
+    }
+
   public class ContentVersionWrapper {
     @AuraEnabled
     public String name { get; set; }

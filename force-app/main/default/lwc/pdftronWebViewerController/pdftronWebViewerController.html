@@ -46,37 +46,6 @@
         </div>
       </template>
     </div>
-    <template if:true={renderRedact}>
-      <div class="slds-var-p-around_xx-small slds-grid">
-        <div class="slds-col slds-size_4-of-4 slds-p-around_x-small">
-          <lightning-button-group>
-            <lightning-button
-              label="Phone Numbers"
-              icon-name="utility:call"
-              onclick={handleContentRedactPhone}
-            ></lightning-button>
-            <lightning-button
-              label="Dates"
-              icon-name="utility:key_dates"
-              onclick={handleContentRedactDTM}
-            ></lightning-button>
-            <lightning-button
-              label="Emails"
-              icon-name="utility:email"
-              onclick={handleContentRedactEmail}
-            ></lightning-button>
-          </lightning-button-group>
-
-          <div class="slds-float_right">
-            <lightning-button
-            variant="brand"
-            label="Redact All Marked Items"
-            title="Redact Text"
-            onclick={handleContentRedact}></lightning-button>
-          </div>
-        </div>
-      </div>
-    </template>
     <template if:true={renderReplace}>
       <div class="slds-col slds-size_1-of-1">
         <div class="slds-var-p-around_xx-small slds-grid">
@@ -105,7 +74,8 @@
       id="wvContainer"
       class="slds-card slds-var-p-left_small slds-var-p-right_small slds-var-p-bottom_small"
     >
-      <c-pdftron-wv-instance record-id={recordId}></c-pdftron-wv-instance>
+      <c-pdftron-wv-instance record-id={recordId} if:false={renderVideo}></c-pdftron-wv-instance>
+      <c-pdftron-wv-video-instance record-id={recordId} if:true={renderVideo}></c-pdftron-wv-video-instance>
     </div>
   </div>
 </template>

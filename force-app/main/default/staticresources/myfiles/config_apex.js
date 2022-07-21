@@ -253,6 +253,7 @@ function receiveMessage(event) {
             instance.UI.closeElements(["leftPanel"]);
             instance.UI.setToolbarGroup("toolbarGroup-View");
             instance.UI.openElements(["searchPanel"]);
+            instance.UI.closeElements(["redactionPanel"]);
             break;
           case "Measure Distances":
             instance.UI.enableFeatures([instance.Feature.Measurement]);
@@ -260,6 +261,7 @@ function receiveMessage(event) {
             instance.UI.closeElements(["leftPanel"]);
             instance.UI.closeElements(["searchPanel"]);
             instance.UI.setToolbarGroup("toolbarGroup-Measure");
+            instance.UI.closeElements(["redactionPanel"]);
             break;
           case "Annotate Documents":
             instance.UI.disableFeatures([instance.Feature.Measurement]);
@@ -268,6 +270,7 @@ function receiveMessage(event) {
             instance.UI.closeElements(["leftPanel"]);
             instance.UI.closeElements(["searchPanel"]);
             instance.UI.setToolbarGroup("toolbarGroup-Annotate");
+            instance.UI.closeElements(["redactionPanel"]);
             break;
           case "Save Documents":
             instance.UI.disableFeatures([instance.Feature.Measurement]);
@@ -276,6 +279,7 @@ function receiveMessage(event) {
             instance.UI.closeElements(["leftPanel"]);
             instance.UI.closeElements(["searchPanel"]);
             instance.UI.setToolbarGroup("toolbarGroup-Annotate");
+            instance.UI.closeElements(["redactionPanel"]);
             break;
           case "Replace Content":
             instance.UI.disableFeatures([instance.Feature.Measurement]);
@@ -284,6 +288,7 @@ function receiveMessage(event) {
             instance.UI.closeElements(["leftPanel"]);
             instance.UI.closeElements(["searchPanel"]);
             instance.UI.setToolbarGroup("toolbarGroup-View");
+            instance.UI.closeElements(["redactionPanel"]);
             break;
           case "Redact Content":
             instance.UI.disableFeatures([instance.Feature.Measurement]);
@@ -291,8 +296,8 @@ function receiveMessage(event) {
             instance.UI.closeElements(["notesPanel"]);
             instance.UI.closeElements(["leftPanel"]);
             instance.UI.closeElements(["searchPanel"]);
-            instance.UI.setToolbarGroup("toolbarGroup-Edit");
-            instance.UI.setToolMode(Tools.ToolNames.REDACTION);
+            instance.UI.setToolbarGroup('toolbarGroup-Redact');
+            instance.UI.openElements(["redactionPanel"]);
             break;
           case "Edit Page(s)":
             instance.UI.disableFeatures([instance.Feature.Measurement]);
@@ -301,6 +306,7 @@ function receiveMessage(event) {
             instance.UI.closeElements(["searchPanel"]);
             instance.UI.closeElements(["notesPanel"]);
             instance.UI.setToolbarGroup("toolbarGroup-View");
+            instance.UI.closeElements(["redactionPanel"]);
             break;
           case "Sign Documents":
             instance.UI.disableFeatures([instance.Feature.Measurement]);
@@ -309,6 +315,7 @@ function receiveMessage(event) {
             instance.UI.closeElements(["leftPanel"]);
             instance.UI.closeElements(["searchPanel"]);
             instance.UI.setToolbarGroup("toolbarGroup-FillAndSign");
+            instance.UI.closeElements(["redactionPanel"]);
             break;
           case "Form Fields":
             instance.UI.disableFeatures([instance.Feature.Measurement]);
@@ -317,6 +324,7 @@ function receiveMessage(event) {
             instance.UI.closeElements(["leftPanel"]);
             instance.UI.closeElements(["searchPanel"]);
             instance.UI.setToolbarGroup("toolbarGroup-Forms");
+            instance.UI.closeElements(["redactionPanel"]);
             break;
           case "Crop Documents":
             instance.UI.disableFeatures([instance.Feature.Measurement]);
@@ -326,6 +334,7 @@ function receiveMessage(event) {
             instance.UI.closeElements(["searchPanel"]);
             instance.UI.setToolbarGroup("toolbarGroup-Edit");
             instance.UI.setToolMode(Tools.ToolNames.CROP);
+            instance.UI.closeElements(["redactionPanel"]);
             break;
           case "Collaborate - Comments, Mentions, Approvals":
             instance.UI.disableFeatures([instance.Feature.Measurement]);
@@ -334,6 +343,7 @@ function receiveMessage(event) {
             instance.UI.closeElements(["searchPanel"]);
             instance.UI.openElements(["notesPanel"]);
             instance.UI.setToolbarGroup("toolbarGroup-Annotate");
+            instance.UI.closeElements(["redactionPanel"]);
             break;
           default:
             instance.UI.disableFeatures([instance.Feature.Measurement]);
@@ -342,6 +352,7 @@ function receiveMessage(event) {
             instance.UI.closeElements(["searchPanel"]);
             instance.UI.setToolbarGroup("toolbarGroup-View");
             instance.UI.disableElements(["header"]);
+            instance.UI.closeElements(["redactionPanel"]);
             break;
         }
         break;

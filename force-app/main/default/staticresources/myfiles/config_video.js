@@ -1,69 +1,70 @@
-var resourceURL = "/resource/";
-window.CoreControls.forceBackendType("ems");
+var resourceURL = '/resource/'
+window.Core.forceBackendType('ems');
 
-var urlSearch = new URLSearchParams(location.hash);
-var custom = JSON.parse(urlSearch.get("custom"));
+var urlSearch = new URLSearchParams(location.hash)
+var custom = JSON.parse(urlSearch.get('custom'));
 resourceURL = resourceURL + custom.namespacePrefix;
 
-var script = document.createElement("script");
-script.type = "text/javascript";
+// var script = document.createElement('script');
+// script.type = 'text/javascript';
+// script.src = custom.path + '/video.js';
+// document.head.appendChild(script);
 
-// @TODO
-// update '/1614618671000/' timestamp to work with your org
-// use relative path to your main.js file hosted in your static resources
-let timestamp = Date.now() + "";
-script.src = `/resource/1614618671000/myfiles/main.js`;
-
-document.head.appendChild(script);
+var videoMain = document.createElement('script');
+videoMain.type = 'text/javascript';
+videoMain.src = custom.path + '/main-with-react.js';
+document.head.appendChild(videoMain);
 
 var onLoadPromise = new Promise(function (resolve) {
-  script.onload = function () {
+  videoMain.onload = function () {
     resolve();
-  };
+  }
 });
 
 /**
- * The following `window.CoreControls.set*` functions point WebViewer to the
+ * The following `window.Core.set*` functions point WebViewer to the
  * optimized source code specific for the Salesforce platform, to ensure the
  * uploaded files stay under the 5mb limit
  */
+
 // office workers
-window.CoreControls.setOfficeWorkerPath(resourceURL + "office");
-window.CoreControls.setOfficeAsmPath(resourceURL + "office_asm");
-window.CoreControls.setOfficeResourcePath(resourceURL + "office_resource");
+window.Core.setOfficeWorkerPath(resourceURL + 'office')
+window.Core.setOfficeAsmPath(resourceURL + 'office_asm');
+window.Core.setOfficeResourcePath(resourceURL + 'office_resource');
 
 // pdf workers
-window.CoreControls.setPDFResourcePath(resourceURL + "resource");
+window.Core.setPDFResourcePath(resourceURL + 'resource')
 if (custom.fullAPI) {
-  window.CoreControls.setPDFWorkerPath(resourceURL + "pdf_full");
-  window.CoreControls.setPDFAsmPath(resourceURL + "asm_full");
+  window.Core.setPDFWorkerPath(resourceURL + 'pdf_full')
+  window.Core.setPDFAsmPath(resourceURL + 'asm_full');
 } else {
-  window.CoreControls.setPDFWorkerPath(resourceURL + "pdf_lean");
-  window.CoreControls.setPDFAsmPath(resourceURL + "asm_lean");
+  window.Core.setPDFWorkerPath(resourceURL + 'pdf_lean')
+  window.Core.setPDFAsmPath(resourceURL + 'asm_lean');
 }
 
 // external 3rd party libraries
-window.CoreControls.setExternalPath(resourceURL + "external");
-window.CoreControls.setCustomFontURL(
-  "https://pdftron.s3.amazonaws.com/custom/ID-zJWLuhTffd3c/vlocity/webfontsv20/"
-);
+window.Core.setExternalPath(resourceURL + 'external')
+
+var currentDocId;
 
 async function saveDocument() {
-  const doc = docViewer.getDocument();
+  // SF document file size limit
+  const docLimit = 5 * Math.pow(1024, 2);
+  const doc = instance.Core.documentViewer.getDocument();
   if (!doc) {
     return;
   }
-  instance.openElement("loadingModal");
-
+  instance.openElement('loadingModal');
+  const fileSize = await doc.getFileSize();
   const fileType = doc.getType();
   const filename = doc.getFilename();
-  const xfdfString = await docViewer.getAnnotationManager().exportAnnotations();
+  const xfdfString = await instance.Core.documentViewer.getAnnotationManager().exportAnnotations();
   const data = await doc.getFileData({
     // Saves the document with annotations in it
-    xfdfString,
+    xfdfString
   });
 
-  let binary = "";
+  let binary = '';
   const bytes = new Uint8Array(data);
   for (let i = 0; i < bytes.byteLength; i++) {
     binary += String.fromCharCode(bytes[i]);
@@ -75,48 +76,126 @@ async function saveDocument() {
     title: filename.replace(/\.[^/.]+$/, ""),
     filename,
     base64Data,
-    contentDocumentId: doc.__contentDocumentId,
-  };
+    contentDocumentId: currentDocId
+  }
   // Post message to LWC
-  parent.postMessage({ type: "SAVE_DOCUMENT", payload }, "*");
+  fileSize < docLimit ? parent.postMessage({ type: 'SAVE_DOCUMENT', payload }, '*') : downloadWebViewerFile();
 }
 
-window.addEventListener("viewerLoaded", async function () {
-  onLoadPromise.then(function () {
-    instance.iframeWindow = window;
-    var customContainer = window.document.querySelector(".custom-container");
-    instance.CoreControls = CoreControls;
-    instance.Annotations = Annotations;
-    instance.Tools = Tools;
+const downloadWebViewerFile = async () => {
+  const doc = instance.Core.documentViewer.getDocument();
 
-    instance.openElements("notesPanel");
-    instance.setTheme("dark");
-    window.WebViewerVideo.initializeVideoViewer(
-      instance,
-      "LICENSE_KEY_HERE"
-    ).then(({ loadVideo }) => {
-      const videoUrl =
-        "https://pdftron.s3.amazonaws.com/downloads/pl/video/video.mp4";
-      loadVideo(videoUrl);
+  if (!doc) {
+    return;
+  }
 
-      instance.docViewer.on("documentLoaded", () => {
-        window.WebViewerVideo.renderControlsToDOM(instance, customContainer);
-      });
-    });
+  const data = await doc.getFileData();
+  const arr = new Uint8Array(data);
+  const blob = new Blob([arr], { type: 'application/pdf' });
+
+  const filename = doc.getFilename();
+
+  downloadFile(blob, filename)
+}
+
+const downloadFile = (blob, fileName) => {
+  const link = document.createElement('a');
+  // create a blobURI pointing to our Blob
+  link.href = URL.createObjectURL(blob);
+  link.download = fileName;
+  // some browser needs the anchor to be in the doc
+  document.body.append(link);
+  link.click();
+  link.remove();
+  // in case the Blob uses a lot of memory
+  setTimeout(() => URL.revokeObjectURL(link.href), 7000);
+};
+
+window.addEventListener('viewerLoaded', async function () {
+  instance.hotkeys.on('ctrl+s, command+s', e => {
+    e.preventDefault();
+    saveDocument();
   });
+
+  // Create a button, with a disk icon, to invoke the saveDocument function
+  instance.setHeaderItems(function (header) {
+    var myCustomButton = {
+      type: 'actionButton',
+      dataElement: 'saveDocumentButton',
+      title: 'tool.SaveDocument',
+      img: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>',
+      onClick: function () {
+        saveDocument();
+      }
+    }
+    header.get('viewControlsButton').insertBefore(myCustomButton);
+
+
+  });
+
+  // When the viewer has loaded, this makes the necessary call to get the
+  // pdftronWvInstance code to pass User Record information to this config file
+  // to invoke annotManager.setCurrentUser
+  instance.Core.documentViewer.getAnnotationManager().setCurrentUser(custom.username);
+
+  const annotationManager = await instance.Core.documentViewer.getAnnotationManager();
+
+  onLoadPromise
+    .then(function () {
+      var customContainer = window.document.querySelector('.custom-container');
+
+      instance.openElements('notesPanel');
+      instance.setTheme('dark');
+
+      instance.iframeWindow = window;
+
+      console.log(instance);
+      console.log(instance.iframeWindow);
+
+      window.WebViewerVideo.initializeVideoViewer(instance)
+        .then(({ loadVideo }) => {
+          const videoUrl = 'https://pdftron.s3.amazonaws.com/downloads/pl/video/video.mp4';
+          loadVideo(videoUrl);
+
+          // instance.docViewer.on('documentLoaded', () => {
+          //   window.WebViewerVideo.renderControlsToDOM(instance, customContainer);
+          // });
+        });
+    });
 });
 
 window.addEventListener("message", receiveMessage, false);
 
-async function receiveMessage(event) {
-  if (event.isTrusted && typeof event.data === "object") {
+function receiveMessage(event) {
+  if (event.isTrusted && typeof event.data === 'object') {
     switch (event.data.type) {
-      case "LOAD_VIDEO":
-        console.log(event.data);
-        console.log(event.data.url);
-
-        loadVid(event.data.url);
-
+      case 'OPEN_DOCUMENT':
+        instance.loadDocument(event.data.file)
+        break;
+      case 'OPEN_DOCUMENT_BLOB':
+        const { blob, extension, filename, documentId } = event.data.payload;
+        console.log("documentId", documentId);
+        currentDocId = documentId;
+        instance.loadDocument(blob, { extension, filename, documentId })
+        break;
+      case 'DOCUMENT_SAVED':
+        console.log(`${JSON.stringify(event.data)}`);
+        instance.showErrorMessage('Document saved ')
+        setTimeout(() => {
+          instance.closeElements(['errorModal', 'loadingModal'])
+        }, 2000)
+        break;
+      case 'LMS_RECEIVED':  
+        instance.loadDocument(event.data.payload.message, {
+          filename: event.data.payload.filename,
+          withCredentials: false
+        });
+        break;
+      case 'DOWNLOAD_DOCUMENT':
+        downloadWebViewerFile();
+        break;
+      case 'CLOSE_DOCUMENT':
+        instance.closeDocument()
         break;
       default:
         break;

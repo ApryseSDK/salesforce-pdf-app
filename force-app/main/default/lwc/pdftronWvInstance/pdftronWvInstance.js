@@ -59,7 +59,7 @@ export default class PdftronWvInstance extends LightningElement {
     ///servlet/servlet.FileDownload?file=documentId0694x000000pEGyAAM
     this.handleSubscribe();
     registerListener("blobSelected", this.handleBlobSelected, this);
-    registerListener('transportDocument', this.transportDocument, this);
+    registerListener("transportDocument", this.transportDocument, this);
     registerListener("search", this.search, this);
     registerListener("ribbon", this.handleRibbon, this);
     registerListener("video", this.loadVideo, this);
@@ -71,6 +71,7 @@ export default class PdftronWvInstance extends LightningElement {
     registerListener('clearSelected', this.handleClearSelected, this);
     registerListener('doc_gen_mapping', this.handleTemplateMapping, this);
     window.addEventListener('unload', this.unloadHandler,this);
+
     window.addEventListener("message", this.handleReceiveMessage);
   }
 
@@ -84,8 +85,7 @@ export default class PdftronWvInstance extends LightningElement {
     if (this.channel) {
       return;
     }
-    this.channel = subscribe(this.context, WebViewerMC, (message) => {
-    });
+    this.channel = subscribe(this.context, WebViewerMC, (message) => {});
   }
 
   handleUnsubscribe() {
@@ -145,14 +145,17 @@ export default class PdftronWvInstance extends LightningElement {
       documentId: record.cv.Id,
     };
 
-    this.payload = {...payload};
+    this.payload = { ...payload };
 
-    switch (payload.extension){
-      case 'tiff':
-        this.iframeWindow.postMessage({ type: 'OPEN_TIFF_BLOB', payload }, '*');
+    switch (payload.extension) {
+      case "tiff":
+        this.iframeWindow.postMessage({ type: "OPEN_TIFF_BLOB", payload }, "*");
         break;
       default:
-        this.iframeWindow.postMessage({ type: 'OPEN_DOCUMENT_BLOB', payload }, '*');
+        this.iframeWindow.postMessage(
+          { type: "OPEN_DOCUMENT_BLOB", payload },
+          "*"
+        );
         break;
     }
   }
@@ -164,9 +167,7 @@ export default class PdftronWvInstance extends LightningElement {
     }
     this.uiInitialized = true;
 
-    Promise.all([
-      loadScript(self, libUrl + "/webviewer.min.js")
-    ])
+    Promise.all([loadScript(self, libUrl + "/webviewer.min.js")])
       .then(() => this.handleCustomPermission())
       .then(() => this.handleMentions())
       .then(() => this.handleInitWithCurrentUser())
@@ -174,14 +175,14 @@ export default class PdftronWvInstance extends LightningElement {
   }
 
   handleCustomPermission() {
-    getCustomPermission({ permission: 'YOUR_CUSTOM_PERMISSION'})
-    .then((result) => {
-      this.hasPermission = result;
-    })
-    .catch((error) => {
-      console.error(error);
-      this.showNotification("Error", error.body.message, "error");
-    });
+    getCustomPermission({ permission: "YOUR_CUSTOM_PERMISSION" })
+      .then((result) => {
+        this.hasPermission = result;
+      })
+      .catch((error) => {
+        console.error(error);
+        this.showNotification("Error", error.body.message, "error");
+      });
   }
 
   handleMentions() {
@@ -223,13 +224,14 @@ export default class PdftronWvInstance extends LightningElement {
 
 
   initUI() {
+    
     var myObj = {
       libUrl: libUrl,
       fullAPI: this.fullAPI || false,
       namespacePrefix: "",
       username: this.username,
       userlist: JSON.stringify(this.users),
-      hasPermission: this.hasPermission
+      hasPermission: this.hasPermission,
     };
     var url = myfilesUrl + "/webviewer-demo-annotated.pdf";
 
@@ -246,8 +248,8 @@ export default class PdftronWvInstance extends LightningElement {
         enableFilePicker: this.enableFilePicker,
         enableRedaction: this.enableRedaction,
         enableMeasurement: this.enableMeasurement,
+        enableOptimizedWorkers: false
         // l: 'YOUR_LICENSE_KEY_HERE',
-        
       },
       viewerElement
     );
@@ -258,29 +260,27 @@ export default class PdftronWvInstance extends LightningElement {
   }
 
   transportDocument(convert) {
-    if(this.payload != null){
-
-      const payload = {...this.payload};
+    if (this.payload != null) {
+      const payload = { ...this.payload };
       payload.exportType = convert.value;
       payload.transport = convert.transport;
-      this.iframeWindow.postMessage({type: convert.transport, payload }, '*');
-
+      this.iframeWindow.postMessage({ type: convert.transport, payload }, "*");
     } else {
-      console.log('No file selected');
+      console.log("No file selected");
     }
   }
 
   handleClearSelected() {
-    this.iframeWindow.postMessage({type: 'CLOSE_DOCUMENT' }, '*')
+    this.iframeWindow.postMessage({ type: "CLOSE_DOCUMENT" }, "*");
   }
 
-  showNotification (title, message, variant) {
+  showNotification(title, message, variant) {
     const evt = new ShowToastEvent({
       title: title,
       message: message,
-      variant: variant
-    })
-    this.dispatchEvent(evt)
+      variant: variant,
+    });
+    this.dispatchEvent(evt);
   }
 
   handleReceiveMessage = (event) => {
@@ -304,20 +304,34 @@ export default class PdftronWvInstance extends LightningElement {
           break;
         case "SAVE_CONVERT_DOCUMENT":
           const cvId = event.data.payload.contentDocumentId;
-          saveConvertDocument({ json: JSON.stringify(event.data.payload), recordId: this.recordId ? this.recordId : '', cvId: cvId })
-          .then((response) => {
-            me.iframeWindow.postMessage({ type: 'DOCUMENT_SAVED', response }, '*');
-            fireEvent(this.pageRef, 'finishConvert', '');
-            fireEvent(this.pageRef, 'refreshOnSave', response);
-            this.showNotification('Success', event.data.payload.filename + ' Saved', 'success');
+          saveConvertDocument({
+            json: JSON.stringify(event.data.payload),
+            recordId: this.recordId ? this.recordId : "",
+            cvId: cvId,
           })
-          .catch(error => {
-            me.iframeWindow.postMessage({ type: 'DOCUMENT_SAVED', error }, '*');
-            fireEvent(this.pageRef, 'refreshOnSave', error);
-            console.error(event.data.payload.contentDocumentId);
-            console.error(JSON.stringify(error));
-            this.showNotification('Error', error.body, 'error');
-          });
+            .then((response) => {
+              me.iframeWindow.postMessage(
+                { type: "DOCUMENT_SAVED", response },
+                "*"
+              );
+              fireEvent(this.pageRef, "finishConvert", "");
+              fireEvent(this.pageRef, "refreshOnSave", response);
+              this.showNotification(
+                "Success",
+                event.data.payload.filename + " Saved",
+                "success"
+              );
+            })
+            .catch((error) => {
+              me.iframeWindow.postMessage(
+                { type: "DOCUMENT_SAVED", error },
+                "*"
+              );
+              fireEvent(this.pageRef, "refreshOnSave", error);
+              console.error(event.data.payload.contentDocumentId);
+              console.error(JSON.stringify(error));
+              this.showNotification("Error", error.body, "error");
+            });
           break;
         case "DOC_KEYS":
           let keys = JSON.parse(JSON.stringify(event.data.keys));
@@ -330,10 +344,11 @@ export default class PdftronWvInstance extends LightningElement {
           const body = event.data.file + ' Downloaded';
           fireEvent(this.pageRef, 'finishConvert', '');
           this.showNotification('Success', body, 'success');
+
           break;
         default:
           break;
       }
     }
-  }
+  };
 }
