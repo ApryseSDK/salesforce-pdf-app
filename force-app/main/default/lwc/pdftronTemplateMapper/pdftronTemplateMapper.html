@@ -1,0 +1,73 @@
+<template>
+    <template if:true={isLoading}>
+        <div class="spinnerContainer">
+            <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+        </div>
+    </template>
+    <template if:false={showTable}>
+        <p class="slds-var-p-around_small slds-align_absolute-center">You must open a .docx that contains valid template
+            tags.</p>
+    </template>
+    <template if:true={showTable}>
+        <c-pdftron-template-mapper-modal></c-pdftron-template-mapper-modal>
+        <h1>Source</h1>
+
+        <div class="slds-var-p-left_large slds-var-p-right_large slds-var-p-bottom_large">
+            <c-lookup onsearch={handleSearch} onselectionchange={handleSingleSelectionChange} label="Search Standard Object Records"
+                placeholder="Search Records By Name"></c-lookup>
+        </div>
+        <p class="slds-var-p-around_small slds-align_absolute-center">-- or --</p>
+        <div class="slds-var-p-left_large slds-var-p-right_large slds-var-p-bottom_large">
+            <lightning-combobox name="sObject" label="Object" value={selectedObject} placeholder="Select from all objects"
+                options={sObjects} onchange={handleSObjectChange} disabled={recordSearched} required></lightning-combobox>
+        </div>
+        <div class="slds-var-p-left_large slds-var-p-right_large slds-var-p-bottom_large">
+            <lightning-input type="text" label="Id" placeholder="Enter record id..." onchange={handleRecordId} value={recordId} disabled={recordSearched} required>
+            </lightning-input>
+        </div>
+
+        <div class="slds-align_absolute-center">
+            <lightning-button label="Preview" onclick={handleFill}></lightning-button>
+            <lightning-button class="slds-var-p-left_xx-small" variant="brand" label="Save as Template"
+                onclick={handleSaveTemplate}></lightning-button>
+        </div>
+
+        <h1>Mapping</h1>
+        <div class="slds-card__body slds-card__body_inner">
+            <table class="slds-table slds-table_bordered slds-table_cell-buffer slds-var-m-bottom_large">
+                <thead>
+                    <tr class="slds-text-title_caps">
+                        <template for:each={columns} for:item="column">
+                            <th key={column.apiName}>
+                                <div class="slds-truncate">{column.label}</div>
+                            </th>
+                        </template>
+                    </tr>
+                </thead>
+                <tbody>
+                    <template for:each={rows} for:item="row" for:index="index">
+                        <tr class="inputRows" key={row.templateKey}>
+                            <td>
+                                <lightning-input class="slds-p-around_xx-small" variant="label-hidden" type="text"
+                                    value={row.templateKey} disabled></lightning-input>
+                            </td>
+                            <td>
+                                <lightning-combobox name="Field" class="dropdownfields" label="Field"
+                                    variant="label-hidden" placeholder="Select Field" options={sObjectFields}
+                                    data-templatekey={row.templateKey} required></lightning-combobox>
+                            </td>
+                            <template for:each={columns} for:item="column">
+                                <td key={column.apiName}></td>
+                            </template>
+                        </tr>
+                    </template>
+                </tbody>
+            </table>
+            <div class="slds-align_absolute-center">
+                <lightning-button label="Preview" onclick={handleFill}></lightning-button>
+                <lightning-button class="slds-var-p-left_xx-small" variant="brand" label="Save as Template"
+                    onclick={handleSaveTemplate}></lightning-button>
+            </div>
+        </div>
+    </template>
+</template>

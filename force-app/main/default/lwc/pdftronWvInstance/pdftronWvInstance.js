@@ -68,8 +68,10 @@ export default class PdftronWvInstance extends LightningElement {
     registerListener("redactPhone", this.contentRedactPhone, this);
     registerListener("redactDTM", this.contentRedactDTM, this);
     registerListener("redactEmail", this.contentRedactEmail, this);
-    registerListener("clearSelected", this.handleClearSelected, this);
-    window.addEventListener("unload", this.unloadHandler, this);
+    registerListener('clearSelected', this.handleClearSelected, this);
+    registerListener('doc_gen_mapping', this.handleTemplateMapping, this);
+    window.addEventListener('unload', this.unloadHandler,this);
+
     window.addEventListener("message", this.handleReceiveMessage);
   }
 
@@ -215,6 +217,12 @@ export default class PdftronWvInstance extends LightningElement {
       });
   }
 
+  handleTemplateMapping(mapping) {
+    console.log('mapping in instance: ', mapping);
+    this.iframeWindow.postMessage({ type: 'FILL_TEMPLATE', mapping }, '*');
+  }
+
+
   initUI() {
     
     var myObj = {
@@ -325,11 +333,18 @@ export default class PdftronWvInstance extends LightningElement {
               this.showNotification("Error", error.body, "error");
             });
           break;
-        case "DOWNLOAD_CONVERT_DOCUMENT":
-          me.iframeWindow.postMessage({ type: "DOCUMENT_DOWNLOADED" }, "*");
-          const body = event.data.file + " Downloaded";
-          fireEvent(this.pageRef, "finishConvert", "");
-          this.showNotification("Success", body, "success");
+        case "DOC_KEYS":
+          let keys = JSON.parse(JSON.stringify(event.data.keys));
+          console.log("keys", keys);
+
+          console.log("firing doc_gen_options");
+          fireEvent(this.pageRef, 'doc_gen_options', keys);
+        case 'DOWNLOAD_CONVERT_DOCUMENT':
+          me.iframeWindow.postMessage({ type: 'DOCUMENT_DOWNLOADED' }, '*');
+          const body = event.data.file + ' Downloaded';
+          fireEvent(this.pageRef, 'finishConvert', '');
+          this.showNotification('Success', body, 'success');
+
           break;
         default:
           break;

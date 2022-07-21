@@ -50,6 +50,7 @@ const redactionSearchSamples = [
   },
 ];
 
+
 async function saveDocument() {
   const documentViewer = instance.Core.documentViewer;
   const doc = documentViewer.getDocument();
@@ -182,6 +183,24 @@ window.addEventListener("viewerLoaded", async function () {
 
   instance.UI.disableElements(["header"]);
   addSaveButton();
+
+});
+
+window.addEventListener('documentLoaded', async () => {
+  const { documentViewer } = instance.Core;
+  console.log('document loaded!');
+
+  instance.UI.setLayoutMode(instance.UI.LayoutMode.FacingContinuous)
+
+  await documentViewer.getDocument().documentCompletePromise();
+  documentViewer.updateView();
+
+  const doc = documentViewer.getDocument();
+  const keys = await doc.getTemplateKeys();
+
+  console.log("keys", keys);
+
+  parent.postMessage({ type: 'DOC_KEYS', keys }, '*');
 });
 
 window.addEventListener("message", receiveMessage, false);
@@ -431,6 +450,8 @@ function receiveMessage(event) {
       case 'DOWNLOAD_DOCUMENT':
         transportDocument(event.data.payload, false)
         break;
+      case 'FILL_TEMPLATE':
+        fillDocument(event);
       case 'OPEN_TIFF_BLOB':
         loadTIFF(event.data.payload);
         break;
@@ -440,6 +461,14 @@ function receiveMessage(event) {
   }
 }
 
+async function fillDocument(event) {
+  const autofillMap = event.data.mapping;
+
+  console.log('autofillMap', autofillMap);
+
+  await documentViewer.getDocument().applyTemplateValues(autofillMap);
+
+}
 let currentDocId;
 
 function transportDocument(payload, transport){
