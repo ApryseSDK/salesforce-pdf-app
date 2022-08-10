@@ -1,7 +1,7 @@
 import { LightningElement, wire, track, api } from "lwc";
 import { CurrentPageReference } from "lightning/navigation";
 import { loadScript } from "lightning/platformResourceLoader";
-import libUrl from "@salesforce/resourceUrl/lib";
+import libUrl from "@salesforce/resourceUrl/V87lib";
 import myfilesUrl from "@salesforce/resourceUrl/myfiles";
 import {
   publish,
