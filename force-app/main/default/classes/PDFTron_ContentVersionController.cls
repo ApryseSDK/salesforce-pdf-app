@@ -401,24 +401,23 @@ public with sharing class PDFTron_ContentVersionController {
   }
 
   @AuraEnabled(Cacheable=true) 
-    public static List<sobject> queryValuesFromRecord(String recordId, String objectName, List<String> fields) {
-        Map<String, String> fieldMap = new Map<String, String> ();
-        String recId = recordId;
-        String query = 'SELECT ';
-        for(String field : fields) {
-            query += field + ', ';
-        }
+  public static List<sobject> queryValuesFromRecord(String recordId, String objectName, List<String> fields) {
+      String recId = recordId;
+      String query = 'SELECT ';
+      for(String field : fields) {
+          query += field + ', ';
+      }
 
-        query = query.substring(0, query.length() - 2);
-        query += ' ';
-        query += 'FROM ' + objectName + ' ';
-        query += 'WHERE Id = :recId';
+      query = query.substring(0, query.length() - 2);
+      query += ' ';
+      query += 'FROM ' + objectName + ' ';
+      query += 'WHERE Id = :recId';
 
-        List<sobject> sobjlist = Database.query(query);
+      List<sobject> sobjlist = Database.query(query);
 
-        System.debug(sobjlist);
-        return sobjlist;
-    }
+      return sobjlist;
+  }
+
     @AuraEnabled(cacheable=true)
     public static List<String> getSObjects(){
         try {
@@ -471,6 +470,8 @@ public with sharing class PDFTron_ContentVersionController {
                 Contact(Id, FirstName, LastName WHERE id NOT IN :selectedIds)
             LIMIT :MAX_RESULTS
         ];
+
+        system.debug(searchResults);
 
         // Prepare results
         List<LookupSearchResult> results = new List<LookupSearchResult>();

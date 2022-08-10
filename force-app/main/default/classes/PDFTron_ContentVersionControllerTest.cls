@@ -22,6 +22,11 @@ private class PDFTron_ContentVersionControllerTest {
 
     //Test Account
     Account a = new Account();
+    a.BillingStreet = 'Am Tierpark 16';
+    a.BillingCity = 'Cologne';
+    a.BillingPostalCode = '54321';
+    a.BillingState = 'Nordrhein-Westfalen';
+    a.BillingCountry = 'Germany';
     a.Name = 'Test Account';
 
     insert a;
@@ -98,6 +103,21 @@ private class PDFTron_ContentVersionControllerTest {
       currentUser.FirstName +
       ' ' +
       currentUser.LastName,
+      userFullName
+    );
+  }
+
+  @isTest
+  static void testGetUsers() {
+    List<User> userFullName = PDFTron_ContentVersionController.getUsers();
+    System.assertNotEquals(userFullName, null);
+    List<User> users = [
+      SELECT FirstName, LastName, Email
+      FROM User
+    ];
+
+    System.assertEquals(
+      users,
       userFullName
     );
   }
@@ -208,4 +228,78 @@ private class PDFTron_ContentVersionControllerTest {
     ];
     System.assertEquals(savedDocuments.size(), 1);
   }
+
+  @isTest
+  static void testConvertDocument() {
+    String payload = '{"title": "file-sample_150kB test", "filename": "file-sample_150kB test.pdf", "contentDocumentId": "0685Y00000QUaQGQA1" }';
+
+    PDFTron_ContentVersionController.PDFTron_ContentVersionPayload cvp = new PDFTron_ContentVersionController.PDFTron_ContentVersionPayload(
+      payload
+    );
+
+    cvp.base64Data = EncodingUtil.base64Encode(Blob.valueOf('Test Blob Data'));
+
+    ContentVersion contentVersion_1 = [
+      SELECT Id, Title, FileExtension, VersionData
+      FROM ContentVersion
+      WHERE Title = 'some title'
+      LIMIT 1
+    ];
+    Account a = [SELECT Id FROM Account WHERE Name = 'Test Account'];
+    String cvId = PDFTron_ContentVersionController.convertDocument(
+      JSON.serialize(cvp),
+      a.Id,
+      contentVersion_1.Id
+    );
+
+    List<ContentVersion> savedDocuments = [
+      SELECT Id, VersionData
+      FROM ContentVersion
+      WHERE Title = 'file-sample_150kB test'
+    ];
+    System.assertEquals(savedDocuments.size(), 1);
+  }
+
+  @isTest
+  static void testCreateCMTRecord() {
+    String testString = '{"mapping": "test mapping", "sObjectName": "test sobject" , "templateName": "test name", "templateId": "test id", "cmtName": "test cmt name"}';
+    String result = PDFTron_ContentVersionController.createCMTRecord(testString);
+    System.debug(result);
+    System.assertEquals('Done!', result);
+  }
+
+  @isTest 
+  static void testQueryValuesFromRecord() {
+    Account a = [SELECT Id FROM Account WHERE Name = 'Test Account'];
+    String recordId = a.Id + '';
+    List<String> fields = new List<String>{'Name'};
+
+    List<sobject> result = PDFTron_ContentVersionController.QueryValuesFromRecord(
+      recordId, 
+      'Account',
+      fields
+    );
+
+    System.assertEquals((String)result[0].get(Schema.Account.Name), 'Test Account');
+  }
+
+  @isTest
+  static void testGetSObjectFields(){
+    List<String> result_object = PDFTron_ContentVersionController.getSObjects();
+    List<String> result_fields = PDFTron_ContentVersionController.getObjectFields('Account');
+
+  }
+
+  @isTest
+  static void testSearchSOSL() {
+    Account a = [SELECT Id FROM Account WHERE Name = 'Test Account'];
+    Id [] fixedSearchResults = new Id[1];
+    fixedSearchResults[0] = a.Id;
+    Test.setFixedSearchResults(fixedSearchResults);
+
+    List<String> selectedIds = new List<String>();
+    List<LookupSearchResult> results = PDFTron_ContentVersionController.searchSOSL('Test Account', selectedIds);
+    System.assertEquals(results.size(), 1);
+  }
+
 }

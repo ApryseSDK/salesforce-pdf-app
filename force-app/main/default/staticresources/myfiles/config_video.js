@@ -3,7 +3,7 @@ window.Core.forceBackendType('ems');
 
 var urlSearch = new URLSearchParams(location.hash)
 var custom = JSON.parse(urlSearch.get('custom'));
-resourceURL = resourceURL + custom.namespacePrefix;
+resourceURL = resourceURL + custom.namespacePrefix + 'V87';
 
 // var script = document.createElement('script');
 // script.type = 'text/javascript';

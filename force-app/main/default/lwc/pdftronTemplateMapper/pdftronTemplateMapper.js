@@ -146,6 +146,8 @@ export default class PdftronTemplateMapper extends LightningElement {
   }
 
   handleFill () {
+
+
     this.isLoading = true
     //this.validateFields()
 
@@ -161,6 +163,11 @@ export default class PdftronTemplateMapper extends LightningElement {
     })
 
     //send list of fields to Apex and query via dynamic SOQL
+
+    console.log('recordId: ', this.recordId);
+    console.log('objectName: ', this.selectedObject);
+    console.log('fields: ', comboboxfields);
+
     queryValuesFromRecord({
       recordId: this.recordId,
       objectName: this.selectedObject,
