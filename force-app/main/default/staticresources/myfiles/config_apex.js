@@ -196,13 +196,16 @@ documentViewer.addEventListener('documentLoaded', async () => {
 
   await documentViewer.getDocument().documentCompletePromise();
   documentViewer.updateView();
+  let filetype = documentViewer.getDocument().getFilename().split('.').pop();
 
   const doc = documentViewer.getDocument();
   const keys = await doc.getTemplateKeys();
 
   console.log("keys", keys);
 
-  parent.postMessage({ type: 'DOC_KEYS', keys }, '*');
+
+
+  (filetype == 'docx') ? parent.postMessage({ type: 'DOC_KEYS', keys }, '*') : '';
 });
 
 window.addEventListener("message", receiveMessage, false);
