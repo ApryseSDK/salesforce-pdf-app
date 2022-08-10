@@ -1,7 +1,7 @@
 import { LightningElement, wire, track, api } from "lwc";
 import { CurrentPageReference } from "lightning/navigation";
 import { loadScript } from "lightning/platformResourceLoader";
-import libUrl from "@salesforce/resourceUrl/lib";
+import libUrl from "@salesforce/resourceUrl/V87lib";
 import myfilesUrl from "@salesforce/resourceUrl/myfiles";
 import {
   publish,
@@ -303,11 +303,10 @@ export default class PdftronWvInstance extends LightningElement {
             });
           break;
         case "SAVE_CONVERT_DOCUMENT":
-          const cvId = event.data.payload.contentDocumentId;
           saveConvertDocument({
             json: JSON.stringify(event.data.payload),
             recordId: this.recordId ? this.recordId : "",
-            cvId: cvId,
+            cvId: event.data.payload.contentDocumentId,
           })
             .then((response) => {
               me.iframeWindow.postMessage(
@@ -334,16 +333,13 @@ export default class PdftronWvInstance extends LightningElement {
             });
           break;
         case "DOC_KEYS":
-          let keys = JSON.parse(JSON.stringify(event.data.keys));
-          console.log("keys", keys);
-
           console.log("firing doc_gen_options");
-          fireEvent(this.pageRef, 'doc_gen_options', keys);
+          fireEvent(this.pageRef, 'doc_gen_options', JSON.parse(JSON.stringify(event.data.keys)));
+          break;
         case 'DOWNLOAD_CONVERT_DOCUMENT':
           me.iframeWindow.postMessage({ type: 'DOCUMENT_DOWNLOADED' }, '*');
-          const body = event.data.file + ' Downloaded';
           fireEvent(this.pageRef, 'finishConvert', '');
-          this.showNotification('Success', body, 'success');
+          this.showNotification('Success', event.data.file + ' Downloaded', 'success');
 
           break;
         default:

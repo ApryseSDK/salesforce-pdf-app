@@ -15,7 +15,10 @@ public with sharing class PDFTron_CMT_Helper implements Metadata.DeployCallback 
         Metadata.DeployContainer mdContainer = new Metadata.DeployContainer();
         mdContainer.addMetadata(customMetadata);
         PDFTron_CMT_Helper callback = new PDFTron_CMT_Helper();
-        Id jobId = Metadata.Operations.enqueueDeployment(mdContainer, callback);
+        Id jobId;
+        if (!Test.isRunningTest()) {
+            jobId = Metadata.Operations.enqueueDeployment(mdContainer, callback);
+        }
     }
     /* Below method recieves the 2 parameters 
        1 - Metadata.DeployResult => Object of MetadataContainer class where this method has been implemented.

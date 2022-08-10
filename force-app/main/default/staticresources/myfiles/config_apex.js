@@ -1,9 +1,9 @@
 var resourceURL = "/resource/";
-Core.forceBackendType("ems");
+window.Core.forceBackendType("ems");
 
 var urlSearch = new URLSearchParams(location.hash);
 var custom = JSON.parse(urlSearch.get("custom"));
-resourceURL = resourceURL + custom.namespacePrefix;
+resourceURL = resourceURL + custom.namespacePrefix + 'V87';
 
 /**
  * The following `window.CoreControls.set*` functions point WebViewer to the
@@ -11,29 +11,31 @@ resourceURL = resourceURL + custom.namespacePrefix;
  * uploaded files stay under the 5mb limit
  */
 // office workers
-Core.setOfficeWorkerPath(resourceURL + "office");
-Core.setOfficeAsmPath(resourceURL + "office_asm");
-Core.setOfficeResourcePath(resourceURL + "office_resource");
+window.Core.setOfficeWorkerPath(resourceURL + "office");
+window.Core.setOfficeAsmPath(resourceURL + "office_asm");
+window.Core.setOfficeResourcePath(resourceURL + "office_resource");
 
 // legacy office workers
-Core.setLegacyOfficeWorkerPath(resourceURL + "legacyOffice");
-Core.setLegacyOfficeAsmPath(resourceURL + "legacyOffice_asm");
-Core.setLegacyOfficeResourcePath(resourceURL + "legacyOffice_resource");
+window.Core.setLegacyOfficeWorkerPath(resourceURL + "legacyOffice");
+window.Core.setLegacyOfficeAsmPath(resourceURL + "legacyOffice_asm");
+window.Core.setLegacyOfficeResourcePath(resourceURL + "legacyOffice_resource");
 // pdf workers
-Core.setPDFResourcePath(resourceURL + "resource");
+window.Core.setPDFResourcePath(resourceURL + "resource");
 if (custom.fullAPI) {
-  Core.setPDFWorkerPath(resourceURL + "pdf_full");
-  Core.setPDFAsmPath(resourceURL + "asm_full");
+  window.Core.setPDFWorkerPath(resourceURL + "pdf_full");
+  window.Core.setPDFAsmPath(resourceURL + "asm_full");
 } else {
-  Core.setPDFWorkerPath(resourceURL + "pdf_lean");
-  Core.setPDFAsmPath(resourceURL + "asm_lean");
+  window.Core.setPDFWorkerPath(resourceURL + "pdf_lean");
+  window.Core.setPDFAsmPath(resourceURL + "asm_lean");
 }
 
 // external 3rd party libraries
-Core.setExternalPath(resourceURL + "external");
-Core.setCustomFontURL(
+window.Core.setExternalPath(resourceURL + "external");
+window.Core.setCustomFontURL(
   "https://pdftron.s3.amazonaws.com/custom/ID-zJWLuhTffd3c/vlocity/webfontsv20/"
 );
+
+const { documentViewer, annotationManager, Annotations } = instance.Core;
 
 const redactionSearchSamples = [
   {
@@ -186,7 +188,7 @@ window.addEventListener("viewerLoaded", async function () {
 
 });
 
-window.addEventListener('documentLoaded', async () => {
+documentViewer.addEventListener('documentLoaded', async () => {
   const { documentViewer } = instance.Core;
   console.log('document loaded!');
 
@@ -452,6 +454,7 @@ function receiveMessage(event) {
         break;
       case 'FILL_TEMPLATE':
         fillDocument(event);
+        break;
       case 'OPEN_TIFF_BLOB':
         loadTIFF(event.data.payload);
         break;
