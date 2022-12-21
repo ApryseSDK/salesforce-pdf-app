@@ -3,7 +3,7 @@ window.Core.forceBackendType("ems");
 
 var urlSearch = new URLSearchParams(location.hash);
 var custom = JSON.parse(urlSearch.get("custom"));
-resourceURL = resourceURL + custom.namespacePrefix + 'V87';
+resourceURL = resourceURL + custom.namespacePrefix;
 
 /**
  * The following `window.CoreControls.set*` functions point WebViewer to the
