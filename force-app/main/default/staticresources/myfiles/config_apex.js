@@ -16,9 +16,9 @@ window.Core.setOfficeAsmPath(resourceURL + "office_asm");
 window.Core.setOfficeResourcePath(resourceURL + "office_resource");
 
 // legacy office workers
-window.Core.setLegacyOfficeWorkerPath(resourceURL + "legacyOffice");
-window.Core.setLegacyOfficeAsmPath(resourceURL + "legacyOffice_asm");
-window.Core.setLegacyOfficeResourcePath(resourceURL + "legacyOffice_resource");
+// window.Core.setLegacyOfficeWorkerPath(resourceURL + "legacyOffice");
+// window.Core.setLegacyOfficeAsmPath(resourceURL + "legacyOffice_asm");
+// window.Core.setLegacyOfficeResourcePath(resourceURL + "legacyOffice_resource");
 // pdf workers
 window.Core.setPDFResourcePath(resourceURL + "resource");
 if (custom.fullAPI) {
@@ -54,29 +54,27 @@ const redactionSearchSamples = [
 
 
 async function saveDocument() {
-  const documentViewer = instance.Core.documentViewer;
-  const doc = documentViewer.getDocument();
+  // SF document file size limit
+  const docLimit = 5 * Math.pow(1024, 2);
+  const doc = instance.Core.documentViewer.getDocument();
   if (!doc) {
     return;
   }
-
-  instance.openElement("loadingModal");
-
+  instance.UI.openElement('loadingModal');
+  const fileSize = await doc.getFileSize();
   const fileType = doc.getType();
-  const filename = doc.getFilename();
+  let filename = doc.getFilename();
 
-  // xfdf string can be saved to a custom object
-  // to achieve this fire event to LWC here, and pass data to apex
-  const xfdfString = await documentViewer.getAnnotationManager().exportAnnotations();
-
-  //flatten document to include annotations
+  if (fileType == 'image'){
+    filename = filename.replace(/\.[^/.]+$/, ".pdf")
+  }
+  const xfdfString = await instance.Core.documentViewer.getAnnotationManager().exportAnnotations();
   const data = await doc.getFileData({
     // Saves the document with annotations in it
-    xfdfString,
+    xfdfString
   });
 
-  //build a blob
-  let binary = "";
+  let binary = '';
   const bytes = new Uint8Array(data);
   for (let i = 0; i < bytes.byteLength; i++) {
     binary += String.fromCharCode(bytes[i]);
@@ -88,36 +86,26 @@ async function saveDocument() {
     title: filename.replace(/\.[^/.]+$/, ""),
     filename,
     base64Data,
-    contentDocumentId: doc.__contentDocumentId,
-  };
-  // Post message to LWC, which in turn calls PDFTron_ContentVersionController.saveDocument() in the Apex controller
-  parent.postMessage({ type: "SAVE_DOCUMENT", payload }, "*");
+    contentDocumentId: currentDocId
+  }
+  // Post message to LWC
+  fileSize < docLimit ? parent.postMessage({ type: 'SAVE_DOCUMENT', payload }, '*') : downloadWebViewerFile();
 }
 
-async function addSaveButton() {
-  /**
-   * On keydown of either the button combination Ctrl+S or Cmd+S, invoke the
-   * saveDocument function
-   */
-  instance.hotkeys.on("ctrl+s, command+s", (e) => {
-    e.preventDefault();
-    saveDocument();
-  });
-
-  // Create a button, with a disk icon, to invoke the saveDocument function
-  instance.setHeaderItems(function (header) {
-    var myCustomButton = {
-      type: "actionButton",
-      dataElement: "saveDocumentButton",
-      title: "tool.SaveDocument",
-      img:
-        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>',
-      onClick: function () {
-        saveDocument();
+function createSavedModal(instance) {
+  const divInput = document.createElement('div');
+  divInput.innerText = 'File saved successfully.';
+  const modal = {
+    dataElement: 'savedModal',
+    body: {
+      className: 'myCustomModal-body',
+      style: {
+        'text-align': 'center'
       },
-    };
-    header.get("viewControlsButton").insertBefore(myCustomButton);
-  });
+      children: [divInput]
+    }
+  }
+  instance.UI.addCustomModal(modal);
 }
 
 async function getBase64FromUrl(url, token){
@@ -184,8 +172,26 @@ window.addEventListener("viewerLoaded", async function () {
   instance.UI.setToolbarGroup("toolbarGroup-View");
 
   instance.UI.disableElements(["header"]);
-  addSaveButton();
+  instance.hotkeys.on("ctrl+s, command+s", (e) => {
+    e.preventDefault();
+    saveDocument();
+  });
 
+  // Create a button, with a disk icon, to invoke the saveDocument function
+  instance.UI.setHeaderItems(function (header) {
+    var myCustomButton = {
+      type: "actionButton",
+      dataElement: "saveDocumentButton",
+      title: "tool.SaveDocument",
+      img:
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M0 0h24v24H0z" fill="none"/><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>',
+      onClick: function () {
+        saveDocument();
+      },
+    };
+    header.push(myCustomButton);
+  });
+  createSavedModal(instance);
 });
 
 documentViewer.addEventListener('documentLoaded', async () => {
@@ -370,10 +376,11 @@ function receiveMessage(event) {
         instance.loadDocument(blob, { extension, filename, documentId });
         break;
       case "DOCUMENT_SAVED":
-        instance.showErrorMessage("Document saved!");
+        console.log(`${JSON.stringify(event.data)}`);
+        instance.UI.openElements(['savedModal']);
         setTimeout(() => {
-          instance.closeElements(["errorModal", "loadingModal"]);
-        }, 2500);
+          instance.UI.closeElements(['savedModal', 'loadingModal'])
+        }, 2000);
         break;
       case "DOCUMENT_DOWNLOADED":
         instance.showErrorMessage("Document downloaded!");
