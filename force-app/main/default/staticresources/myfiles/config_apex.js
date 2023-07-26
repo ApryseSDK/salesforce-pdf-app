@@ -16,9 +16,9 @@ window.Core.setOfficeAsmPath(resourceURL + "office_asm");
 window.Core.setOfficeResourcePath(resourceURL + "office_resource");
 
 // legacy office workers
-// window.Core.setLegacyOfficeWorkerPath(resourceURL + "legacyOffice");
-// window.Core.setLegacyOfficeAsmPath(resourceURL + "legacyOffice_asm");
-// window.Core.setLegacyOfficeResourcePath(resourceURL + "legacyOffice_resource");
+window.Core.setLegacyOfficeWorkerPath(resourceURL + "legacyOffice");
+window.Core.setLegacyOfficeAsmPath(resourceURL + "legacyOffice_asm");
+window.Core.setLegacyOfficeResourcePath(resourceURL + "legacyOffice_resource");
 // pdf workers
 window.Core.setPDFResourcePath(resourceURL + "resource");
 if (custom.fullAPI) {
