@@ -50,9 +50,6 @@ export default class PdftronWvInstance extends LightningElement {
   @wire(CurrentPageReference)
   pageRef;
 
-  constructor() {
-    super();
-  }
 
   connectedCallback() {
     //'/sfc/servlet.shepherd/version/download/0694x000000pEGyAAM'
@@ -70,7 +67,7 @@ export default class PdftronWvInstance extends LightningElement {
     registerListener("redactEmail", this.contentRedactEmail, this);
     registerListener('clearSelected', this.handleClearSelected, this);
     registerListener('doc_gen_mapping', this.handleTemplateMapping, this);
-    window.addEventListener('unload', this.unloadHandler,this);
+    // window.addEventListener('unload', this.unloadHandler,this);
 
     window.addEventListener("message", this.handleReceiveMessage);
   }
@@ -162,16 +159,16 @@ export default class PdftronWvInstance extends LightningElement {
 
   renderedCallback() {
     var self = this;
+
     if (this.uiInitialized) {
       return;
     }
-    this.uiInitialized = true;
 
     Promise.all([loadScript(self, libUrl + "/webviewer.min.js")])
-      .then(() => this.handleCustomPermission())
-      .then(() => this.handleMentions())
       .then(() => this.handleInitWithCurrentUser())
-      .catch(console.error);
+      .catch((error) => {
+        console.error(error)
+      });
   }
 
   handleCustomPermission() {
@@ -208,7 +205,7 @@ export default class PdftronWvInstance extends LightningElement {
       .then((result) => {
         this.username = result;
         this.error = undefined;
-
+        console.log(result);
         this.initUI();
       })
       .catch((error) => {
@@ -288,15 +285,18 @@ export default class PdftronWvInstance extends LightningElement {
     if (event.isTrusted && typeof event.data === "object") {
       switch (event.data.type) {
         case "SAVE_DOCUMENT":
+          let cvId = event.data.payload.contentDocumentId;
           saveDocument({
             json: JSON.stringify(event.data.payload),
             recordId: this.recordId,
+            cvId: cvId
           })
             .then((response) => {
               me.iframeWindow.postMessage(
                 { type: "DOCUMENT_SAVED", response },
                 "*"
               );
+              fireEvent(this.pageRef, "refreshOnSave", response);
             })
             .catch((error) => {
               console.error(JSON.stringify(error));
