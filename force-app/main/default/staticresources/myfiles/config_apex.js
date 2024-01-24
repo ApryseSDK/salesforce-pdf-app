@@ -168,11 +168,11 @@ window.addEventListener("viewerLoaded", async function () {
     .setCurrentUser(custom.username);
   instance.UI.mentions.setUserData(JSON.parse(custom.userlist));
 
-  instance.enableFeatures([instance.Feature.Redaction]);
+  instance.UI.enableFeatures([instance.UI.Feature.Redaction]);
   instance.UI.setToolbarGroup("toolbarGroup-View");
 
   instance.UI.disableElements(["header"]);
-  instance.hotkeys.on("ctrl+s, command+s", (e) => {
+  instance.UI.hotkeys.on("ctrl+s, command+s", (e) => {
     e.preventDefault();
     saveDocument();
   });
@@ -200,7 +200,7 @@ documentViewer.addEventListener('documentLoaded', async () => {
 
   instance.UI.setLayoutMode(instance.UI.LayoutMode.FacingContinuous)
 
-  await documentViewer.getDocument().documentCompletePromise();
+  await documentViewer.getDocument().getDocumentCompletePromise();
   documentViewer.updateView();
   let filetype = documentViewer.getDocument().getFilename().split('.').pop();
 
@@ -258,7 +258,7 @@ function receiveMessage(event) {
         //UI customization based on use case
         switch (event.data.ribbon) {
           case "Search Text":
-            instance.UI.disableFeatures([instance.Feature.Measurement]);
+            instance.UI.disableFeatures([instance.UI.Feature.Measurement]);
             instance.UI.enableElements(["header"]);
             instance.UI.closeElements(["notesPanel"]);
             instance.UI.closeElements(["leftPanel"]);
@@ -267,7 +267,7 @@ function receiveMessage(event) {
             instance.UI.closeElements(["redactionPanel"]);
             break;
           case "Measure Distances":
-            instance.UI.enableFeatures([instance.Feature.Measurement]);
+            instance.UI.enableFeatures([instance.UI.Feature.Measurement]);
             instance.UI.closeElements(["notesPanel"]);
             instance.UI.closeElements(["leftPanel"]);
             instance.UI.closeElements(["searchPanel"]);
@@ -275,7 +275,7 @@ function receiveMessage(event) {
             instance.UI.closeElements(["redactionPanel"]);
             break;
           case "Annotate Documents":
-            instance.UI.disableFeatures([instance.Feature.Measurement]);
+            instance.UI.disableFeatures([instance.UI.Feature.Measurement]);
             instance.UI.enableElements(["header"]);
             instance.UI.closeElements(["notesPanel"]);
             instance.UI.closeElements(["leftPanel"]);
@@ -284,7 +284,7 @@ function receiveMessage(event) {
             instance.UI.closeElements(["redactionPanel"]);
             break;
           case "Save Documents":
-            instance.UI.disableFeatures([instance.Feature.Measurement]);
+            instance.UI.disableFeatures([instance.UI.Feature.Measurement]);
             instance.UI.enableElements(["header"]);
             instance.UI.closeElements(["notesPanel"]);
             instance.UI.closeElements(["leftPanel"]);
@@ -293,7 +293,7 @@ function receiveMessage(event) {
             instance.UI.closeElements(["redactionPanel"]);
             break;
           case "Replace Content":
-            instance.UI.disableFeatures([instance.Feature.Measurement]);
+            instance.UI.disableFeatures([instance.UI.Feature.Measurement]);
             instance.UI.enableElements(["header"]);
             instance.UI.closeElements(["notesPanel"]);
             instance.UI.closeElements(["leftPanel"]);
@@ -302,7 +302,7 @@ function receiveMessage(event) {
             instance.UI.closeElements(["redactionPanel"]);
             break;
           case "Redact Content":
-            instance.UI.disableFeatures([instance.Feature.Measurement]);
+            instance.UI.disableFeatures([instance.UI.Feature.Measurement]);
             instance.UI.enableElements(["header"]);
             instance.UI.closeElements(["notesPanel"]);
             instance.UI.closeElements(["leftPanel"]);
@@ -311,7 +311,7 @@ function receiveMessage(event) {
             instance.UI.openElements(["redactionPanel"]);
             break;
           case "Edit Page(s)":
-            instance.UI.disableFeatures([instance.Feature.Measurement]);
+            instance.UI.disableFeatures([instance.UI.Feature.Measurement]);
             instance.UI.enableElements(["header"]);
             instance.UI.openElements(["leftPanel"]);
             instance.UI.closeElements(["searchPanel"]);
@@ -320,7 +320,7 @@ function receiveMessage(event) {
             instance.UI.closeElements(["redactionPanel"]);
             break;
           case "Sign Documents":
-            instance.UI.disableFeatures([instance.Feature.Measurement]);
+            instance.UI.disableFeatures([instance.UI.Feature.Measurement]);
             instance.UI.enableElements(["header"]);
             instance.UI.closeElements(["notesPanel"]);
             instance.UI.closeElements(["leftPanel"]);
@@ -329,7 +329,7 @@ function receiveMessage(event) {
             instance.UI.closeElements(["redactionPanel"]);
             break;
           case "Form Fields":
-            instance.UI.disableFeatures([instance.Feature.Measurement]);
+            instance.UI.disableFeatures([instance.UI.Feature.Measurement]);
             instance.UI.enableElements(["header"]);
             instance.UI.closeElements(["notesPanel"]);
             instance.UI.closeElements(["leftPanel"]);
@@ -338,7 +338,7 @@ function receiveMessage(event) {
             instance.UI.closeElements(["redactionPanel"]);
             break;
           case "Crop Documents":
-            instance.UI.disableFeatures([instance.Feature.Measurement]);
+            instance.UI.disableFeatures([instance.UI.Feature.Measurement]);
             instance.UI.enableElements(["header"]);
             instance.UI.closeElements(["notesPanel"]);
             instance.UI.closeElements(["leftPanel"]);
@@ -348,7 +348,7 @@ function receiveMessage(event) {
             instance.UI.closeElements(["redactionPanel"]);
             break;
           case "Collaborate - Comments, Mentions, Approvals":
-            instance.UI.disableFeatures([instance.Feature.Measurement]);
+            instance.UI.disableFeatures([instance.UI.Feature.Measurement]);
             instance.UI.enableElements(["header"]);
             instance.UI.closeElements(["leftPanel"]);
             instance.UI.closeElements(["searchPanel"]);
@@ -357,7 +357,7 @@ function receiveMessage(event) {
             instance.UI.closeElements(["redactionPanel"]);
             break;
           default:
-            instance.UI.disableFeatures([instance.Feature.Measurement]);
+            instance.UI.disableFeatures([instance.UI.Feature.Measurement]);
             instance.UI.closeElements(["notesPanel"]);
             instance.UI.closeElements(["leftPanel"]);
             instance.UI.closeElements(["searchPanel"]);
@@ -367,13 +367,10 @@ function receiveMessage(event) {
             break;
         }
         break;
-      case "OPEN_DOCUMENT":
-        instance.loadDocument(event.data.file);
-        break;
       case "OPEN_DOCUMENT_BLOB":
         const { blob, extension, filename, documentId } = event.data.payload;
         currentDocId = documentId;
-        instance.loadDocument(blob, { extension, filename, documentId });
+        instance.UI.loadDocument(blob, { extension, filename, documentId });
         break;
       case "DOCUMENT_SAVED":
         console.log(`${JSON.stringify(event.data)}`);
