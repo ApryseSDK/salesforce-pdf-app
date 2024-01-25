@@ -67,9 +67,14 @@ export default class PdftronWvInstance extends LightningElement {
     registerListener("redactEmail", this.contentRedactEmail, this);
     registerListener('clearSelected', this.handleClearSelected, this);
     registerListener('doc_gen_mapping', this.handleTemplateMapping, this);
+    registerListener('save_template', this.handleSaveTemplate, this);
     // window.addEventListener('unload', this.unloadHandler,this);
 
     window.addEventListener("message", this.handleReceiveMessage);
+  }
+
+  handleSaveTemplate(mapping){
+    this.iframeWindow.postMessage({ type: 'SAVE_TEMPLATE', mapping }, '*');
   }
 
   disconnectedCallback() {

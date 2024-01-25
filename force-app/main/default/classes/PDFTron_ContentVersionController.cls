@@ -94,8 +94,8 @@ public with sharing class PDFTron_ContentVersionController {
           WHERE Id = :cvList[0].ContentDocumentId
         ];
 
-        if (originalDocument.size() > 0)
-          delete originalDocument;
+        // if (originalDocument.size() > 0)
+        //   delete originalDocument;
       } else {
         System.debug('Could not retrieve record for ' + cvId);
       }
@@ -454,6 +454,36 @@ public with sharing class PDFTron_ContentVersionController {
             throw new AuraHandledException(e.getMessage());
         }
     }
+  @AuraEnabled
+  public static Map<Id, String> getRecords(String objectName){
+    try {
+      Map<Id, String> result = new Map<Id, String>();
+      switch on objectName {
+        when 'Account' {
+          List<Account> accs = [SELECT Id, Name FROM Account];
+          for(Account acc : accs) {
+            result.put(acc.Id, acc.Name);
+          }
+        }
+        when 'Contact' {
+          List<Contact> cons = [SELECT Id, FirstName, LastName FROM Contact];
+          for(Contact con : cons) {
+            result.put(con.Id, con.FirstName + ' ' + con.LastName);
+          }
+        }
+        when 'Opportunity' {
+          List<Opportunity> opps = [SELECT Id, Name FROM Opportunity];
+          for(Opportunity opp : opps) {
+            result.put(opp.Id, opp.Name);
+          }
+        }
+      }
+      return result;
+      
+    } catch (Exception e) {
+      throw new AuraHandledException(e.getMessage());
+    }
+  }
 
   @AuraEnabled(Cacheable=true)
     public static List<LookupSearchResult> searchSOSL(String searchTerm, List<String> selectedIds) {

@@ -9,27 +9,16 @@
             tags.</p>
     </template>
     <template if:true={showTable}>
-        <c-pdftron-template-mapper-modal></c-pdftron-template-mapper-modal>
+        <!-- <c-pdftron-template-mapper-modal></c-pdftron-template-mapper-modal> -->
         <h1>Source</h1>
 
         <div class="slds-var-p-left_large slds-var-p-right_large slds-var-p-bottom_large">
-            <c-lookup onsearch={handleSearch} onselectionchange={handleSingleSelectionChange} label="Search Standard Object Records"
-                placeholder="Search Records By Name"></c-lookup>
-        </div>
-        <p class="slds-var-p-around_small slds-align_absolute-center">-- or --</p>
-        <div class="slds-var-p-left_large slds-var-p-right_large slds-var-p-bottom_large">
-            <lightning-combobox name="sObject" label="Object" value={selectedObject} placeholder="Select from all objects"
+            <lightning-combobox name="SObject" label="SObject" value={selectedObject} placeholder="Select from all objects"
                 options={sObjects} onchange={handleSObjectChange} disabled={recordSearched} required></lightning-combobox>
         </div>
         <div class="slds-var-p-left_large slds-var-p-right_large slds-var-p-bottom_large">
-            <lightning-input type="text" label="Id" placeholder="Enter record id..." onchange={handleRecordId} value={recordId} disabled={recordSearched} required>
-            </lightning-input>
-        </div>
-
-        <div class="slds-align_absolute-center">
-            <lightning-button label="Preview" onclick={handleFill}></lightning-button>
-            <lightning-button class="slds-var-p-left_xx-small" variant="brand" label="Save as Template"
-                onclick={handleSaveTemplate}></lightning-button>
+            <lightning-combobox name="Record" label="Record" value={selectedRecord} placeholder="Select from all records"
+                options={sObjectRecords} onchange={handleRecordChange} disabled={recordSearched} required></lightning-combobox>
         </div>
 
         <h1>Mapping</h1>
@@ -65,7 +54,7 @@
             </table>
             <div class="slds-align_absolute-center">
                 <lightning-button label="Preview" onclick={handleFill}></lightning-button>
-                <lightning-button class="slds-var-p-left_xx-small" variant="brand" label="Save as Template"
+                <lightning-button class="slds-var-p-left_xx-small" variant="brand" label="Save"
                     onclick={handleSaveTemplate}></lightning-button>
             </div>
         </div>

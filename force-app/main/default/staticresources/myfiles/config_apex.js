@@ -1,6 +1,7 @@
 var resourceURL = "/resource/";
 window.Core.forceBackendType("ems");
 
+var global_document;
 var urlSearch = new URLSearchParams(location.hash);
 var custom = JSON.parse(urlSearch.get("custom"));
 resourceURL = resourceURL + custom.namespacePrefix;
@@ -370,6 +371,7 @@ function receiveMessage(event) {
       case "OPEN_DOCUMENT_BLOB":
         const { blob, extension, filename, documentId } = event.data.payload;
         currentDocId = documentId;
+        global_document = event.data.payload;
         instance.UI.loadDocument(blob, { extension, filename, documentId });
         break;
       case "DOCUMENT_SAVED":
@@ -451,7 +453,7 @@ function receiveMessage(event) {
         }, 2000);
         break;
       case "CLOSE_DOCUMENT":
-        instance.closeDocument();
+        instance.UI.closeDocument();
         break;
       case 'EXPORT_DOCUMENT':
         transportDocument(event.data.payload, true)
@@ -465,6 +467,8 @@ function receiveMessage(event) {
       case 'OPEN_TIFF_BLOB':
         loadTIFF(event.data.payload);
         break;
+      case  'SAVE_TEMPLATE':
+        saveTemplate(event);
       default:
         break;
     }
@@ -593,3 +597,50 @@ function exportFile (buffer, fileName, fileExtension) {
   // Post message to LWC
   fileSize < docLimit ? parent.postMessage({ type: 'SAVE_CONVERT_DOCUMENT', payload }, '*') : downloadFile(buffer, fileName, "." + fileExtension);
 }
+
+async function saveTemplate(event) {
+  const autofillMap = event.data.mapping;
+
+  const { blob, extension, filename, documentId } = global_document;
+  const buffer = await blob.arrayBuffer();
+
+  let item = await Core.officeToPDFBuffer(buffer, {
+    extension: extension,
+    officeOptions: {
+      templateValues: autofillMap
+    }});
+  
+  let binary = '';
+  const bytes = new Uint8Array(item);
+  for (let i = 0; i < bytes.byteLength; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+
+  const base64Data = window.btoa(binary);
+
+  const payload = {
+    title: filename.replace(/\.[^/.]+$/, ""),
+    filename: filename.replace(/\.[^/.]+$/, "") + ".pdf",
+    base64Data,
+    contentDocumentId: documentId
+  }
+
+  const arr = new Uint8Array(item);
+  const blob = new Blob([arr], { type: 'application/pdf' });
+
+
+
+  const link = document.createElement('a');
+  // create a blobURI pointing to our Blob
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  // some browser needs the anchor to be in the doc
+  document.body.append(link);
+  link.click();
+  link.remove();
+  // in case the Blob uses a lot of memory
+  setTimeout(() => URL.revokeObjectURL(link.href), 7000);
+  // Post message to LWC
+  // parent.postMessage({ type: 'SAVE_CONVERT_DOCUMENT', payload }, '*');
+}
+

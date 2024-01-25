@@ -4,6 +4,7 @@ import getSObjects from '@salesforce/apex/PDFTron_ContentVersionController.getSO
 import getObjectFields from '@salesforce/apex/PDFTron_ContentVersionController.getObjectFields'
 import queryValuesFromRecord from '@salesforce/apex/PDFTron_ContentVersionController.queryValuesFromRecord'
 import searchSOSL from '@salesforce/apex/PDFTron_ContentVersionController.searchSOSL'
+import getRecords from '@salesforce/apex/PDFTron_ContentVersionController.getRecords'
 import { ShowToastEvent } from 'lightning/platformShowToastEvent'
 import { fireEvent, registerListener, unregisterAllListeners } from 'c/pubsub'
 
@@ -13,6 +14,22 @@ export default class PdftronTemplateMapper extends LightningElement {
   isLoading = false
   mapping = {}
   apiNameToTemplateKeyMap = {}
+  sObjects = [
+    {
+      label: 'Account',
+      value: 'Account'
+    },
+    {
+      label: 'Contact',
+      value: 'Contact'
+    },
+    {
+      label: 'Opportunity',
+      value: 'Opportunity'
+    },
+  ]
+
+  
 
   @api doctemplate
 
@@ -22,31 +39,13 @@ export default class PdftronTemplateMapper extends LightningElement {
   @track value
   @track rows = []
   @track values = []
-  @track sObjects = []
   @track selectedObject = ''
+  @track sObjectRecords = []
   @track sObjectFields = []
+  @track selectedRecord = ''
 
   @wire(CurrentPageReference)
   pageRef
-
-  @wire(getSObjects)
-  attachments ({ error, data }) {
-    if (data) {
-      data.forEach(object => {
-        let option = {
-          label: object,
-          value: object
-        }
-        this.sObjects = [...this.sObjects, option]
-      })
-      error = undefined
-    } else if (error) {
-      console.error(error)
-      this.error = error
-
-      this.showNotification('Error', error.body.message, 'error')
-    }
-  }
 
   connectedCallback () {
     registerListener('doc_gen_options', this.handleOptions, this)
@@ -116,7 +115,22 @@ export default class PdftronTemplateMapper extends LightningElement {
   handleSObjectChange (event) {
     this.selectedObject = event.detail.value
     console.log('this.selectedObject', this.selectedObject)
-
+    getRecords({ objectName: this.selectedObject })
+      .then(data => {
+        console.log('data', data);
+        this.sObjectRecords = []
+        for(const i in data) {
+          let option = {
+            label: data[i],
+            value: i
+          }
+          this.sObjectRecords = [...this.sObjectRecords, option]
+        }
+      })
+      .catch(error => {
+        alert(error.body)
+        console.error(error)
+      })
     getObjectFields({ objectName: this.selectedObject })
       .then(data => {
         this.sObjectFields = []
@@ -134,15 +148,12 @@ export default class PdftronTemplateMapper extends LightningElement {
       })
   }
 
+  handleRecordChange (event) {
+    this.recordId = event.detail.value
+  }
+
   handleSaveTemplate () {
-    let templateData = {}
-
-    templateData['sobject'] = this.selectedObject
-    templateData['mapping'] = this.apiNameToTemplateKeyMap
-    templateData['templateName'] = this.doctemplate.title
-    templateData['templateId'] = this.doctemplate.id
-
-    fireEvent(this.pageRef, 'handleModal', templateData);
+    fireEvent(this.pageRef, 'save_template', this.mapping);
   }
 
   handleFill () {
