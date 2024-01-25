@@ -20,6 +20,9 @@ window.Core.setOfficeResourcePath(resourceURL + "office_resource");
 window.Core.setLegacyOfficeWorkerPath(resourceURL + "legacyOffice");
 window.Core.setLegacyOfficeAsmPath(resourceURL + "legacyOffice_asm");
 window.Core.setLegacyOfficeResourcePath(resourceURL + "legacyOffice_resource");
+
+window.Core.ContentEdit.setWorkerPath(resourceURL + 'content_edit');
+window.Core.ContentEdit.setResourcePath(resourceURL + 'content_edit_resource');
 // pdf workers
 window.Core.setPDFResourcePath(resourceURL + "resource");
 if (custom.fullAPI) {
@@ -61,7 +64,7 @@ async function saveDocument() {
   if (!doc) {
     return;
   }
-  instance.UI.openElement('loadingModal');
+  
   const fileSize = await doc.getFileSize();
   const fileType = doc.getType();
   let filename = doc.getFilename();
@@ -168,7 +171,7 @@ window.addEventListener("viewerLoaded", async function () {
     .getAnnotationManager()
     .setCurrentUser(custom.username);
   instance.UI.mentions.setUserData(JSON.parse(custom.userlist));
-
+  instance.UI.enableFeatures([instance.UI.Feature.ContentEdit]);
   instance.UI.enableFeatures([instance.UI.Feature.Redaction]);
   instance.UI.setToolbarGroup("toolbarGroup-View");
 
@@ -600,18 +603,14 @@ function exportFile (buffer, fileName, fileExtension) {
 
 async function saveTemplate(event) {
   const autofillMap = event.data.mapping;
+  const { filename, documentId } = global_document;
+  const doc = instance.Core.documentViewer.getDocument();
+  const data = await doc.getFileData({
+    downloadType: 'pdf'
+  });
 
-  const { blob, extension, filename, documentId } = global_document;
-  const buffer = await blob.arrayBuffer();
-
-  let item = await Core.officeToPDFBuffer(buffer, {
-    extension: extension,
-    officeOptions: {
-      templateValues: autofillMap
-    }});
-  
   let binary = '';
-  const bytes = new Uint8Array(item);
+  const bytes = new Uint8Array(data);
   for (let i = 0; i < bytes.byteLength; i++) {
     binary += String.fromCharCode(bytes[i]);
   }
@@ -624,23 +623,7 @@ async function saveTemplate(event) {
     base64Data,
     contentDocumentId: documentId
   }
-
-  const arr = new Uint8Array(item);
-  const blob = new Blob([arr], { type: 'application/pdf' });
-
-
-
-  const link = document.createElement('a');
-  // create a blobURI pointing to our Blob
-  link.href = URL.createObjectURL(blob);
-  link.download = filename;
-  // some browser needs the anchor to be in the doc
-  document.body.append(link);
-  link.click();
-  link.remove();
-  // in case the Blob uses a lot of memory
-  setTimeout(() => URL.revokeObjectURL(link.href), 7000);
   // Post message to LWC
-  // parent.postMessage({ type: 'SAVE_CONVERT_DOCUMENT', payload }, '*');
+  parent.postMessage({ type: 'SAVE_CONVERT_DOCUMENT', payload }, '*');
 }
 
