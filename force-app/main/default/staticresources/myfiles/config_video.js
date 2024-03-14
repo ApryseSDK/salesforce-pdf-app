@@ -60,8 +60,8 @@ window.addEventListener('viewerLoaded', async function () {
     .then(function () {
       var customContainer = window.document.querySelector('.custom-container');
 
-      instance.openElements('notesPanel');
-      instance.setTheme('dark');
+      instance.UI.openElements('notesPanel');
+      instance.UI.setTheme('dark');
 
       instance.iframeWindow = window;
 
@@ -86,13 +86,13 @@ function receiveMessage(event) {
   if (event.isTrusted && typeof event.data === 'object') {
     switch (event.data.type) {
       case 'OPEN_DOCUMENT':
-        instance.loadDocument(event.data.file)
+        instance.UI.loadDocument(event.data.file)
         break;
       case 'OPEN_DOCUMENT_BLOB':
         const { blob, extension, filename, documentId } = event.data.payload;
         console.log("documentId", documentId);
         currentDocId = documentId;
-        instance.loadDocument(blob, { extension, filename, documentId })
+        instance.UI.loadDocument(blob, { extension, filename, documentId })
         break;
       case 'DOCUMENT_SAVED':
         console.log(`${JSON.stringify(event.data)}`);
